@@ -3,8 +3,11 @@
 
 bool Collision::AABBtoAABB(QVector3D tBox1,QVector3D tBox2, float widthX, float height, float widthZ)
 {
-    float sizeP = 0.001f;//largeur
+    float sizeP = 0.5f;//largeur
     float sizeH = 1.0f;//hauteur
+    widthX /=2;
+    height /=2;
+    widthZ /=2;
     return(tBox1.x() + sizeP > tBox2.x() - widthX &&
         tBox1.x() - sizeP < tBox2.x() + widthX &&
         tBox1.y() + sizeH > tBox2.y() - height &&
