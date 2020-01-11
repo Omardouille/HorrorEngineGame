@@ -371,12 +371,7 @@ void GLWidget::initializeGL()
             //nothing
         }
     }
-    /*
-     * Tu fais en sorte de bien charger les textures
-     *  tu regardes le pb de rotation
-     * tu remets la fonction ailleurs
-     * et tu remets le barycentrem ais en mettant bien lesp os
-     * /
+
 
 
 
