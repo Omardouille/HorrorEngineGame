@@ -259,7 +259,7 @@ Container* loadMultiplesMesh(std::string filename, Pool* poolFiles) {
             newMesh.vertex = vertex;
             newMesh.texCoord = texCoord;
             newMesh.indices = curMesh.Indices;
-            Mesh* mesh = new Mesh(filename+curMesh.MeshName,newMesh, poolFiles, "../" + curMesh.MeshMaterial.map_Kd);
+            Mesh* mesh = new Mesh(filename+curMesh.MeshName,newMesh, poolFiles, "../forest/" + curMesh.MeshMaterial.map_Kd);
             std::cout << "nom texture : " << curMesh.MeshMaterial.map_Kd << std::endl;
             bigMeshs->addChild(mesh);
         }
@@ -309,6 +309,7 @@ void GLWidget::initializeGL()
 
     skybox = new Skybox(poolFiles, "../vertex_shader_skybox.glsl", "../fragment_shader_skybox.glsl");
     camera = new Camera();
+    camera->transform.y = 0.51;
     root->addChild(camera);
 
 
@@ -325,7 +326,8 @@ void GLWidget::initializeGL()
 
     //Container* voila = loadMultObj("../salutobj.obj", poolFiles, "../vertex_shader.glsl", "../fragment_shader.glsl");
 
-    Container* voila = loadMultiplesMesh("../salutobj.obj",poolFiles);
+    //Container* voila = loadMultiplesMesh("../salutobj.obj",poolFiles);
+    Container* voila = loadMultiplesMesh("../forest/forest.obj",poolFiles);
     root->addChild(voila);
 
 //collision
@@ -351,8 +353,10 @@ void GLWidget::initializeGL()
            float widthX = fabs(xMax - xMin);
            float widthZ = fabs(zMax - zMin);
            sizeMeshs[m.first] = QVector3D(widthX,height,widthZ);
+           float xPos = xMin+widthX/2;
+           float zPos = zMin+widthZ/2;
+           positionMeshs[m.first] = QVector3D(xPos,0,zPos);
         }
-
     std::vector<Object*> childs = root->children;
 
     for(Object* o : childs){
@@ -360,18 +364,24 @@ void GLWidget::initializeGL()
             std::vector<Object*> childs2 = con->children;
             for(Object* o2 : childs2){
                 if(Mesh* m2 = dynamic_cast<Mesh*>(o2)){
-                    world[m2->getMeshID()] = m2->getPosition();
+                    world[m2->getMeshID()] = this->positionMeshs[m2->getMeshID()];
                 }
             }
         }
         else if(Mesh* m = dynamic_cast<Mesh*>(o)){
-            world[m->getMeshID()] = m->getPosition();
+            world[m->getMeshID()] = this->positionMeshs[m->getMeshID()];
         }
         else{
             //nothing
         }
     }
-
+    //std::unordered_map<unsigned int, QVector3D> world36 = this->positionMeshs;
+    /*
+     * Tu fais en sorte de bien charger les textures
+     *  tu regardes le pb de rotation
+     * tu remets la fonction ailleurs
+     * et tu remets le barycentrem ais en mettant bien lesp os
+     * /
 
 
 
@@ -471,8 +481,8 @@ void GLWidget::autoCamera() {
 
 void GLWidget::timerEvent(QTimerEvent *)
 {
-    QVector3D toutdroit(0,0,1);
-    QVector3D agauche(1,0,0);
+    QVector3D toutdroit(0,0,0.2);
+    QVector3D agauche(0.2,0,0);
     float y = camera->transform.y;
     if(isUp)
        camera->transform.translate(-toutdroit[0], -toutdroit[1], -toutdroit[2]);

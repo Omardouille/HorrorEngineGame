@@ -159,6 +159,7 @@ private:
 
     std::unordered_map<unsigned int, QVector3D> world;
     std::unordered_map<unsigned int, QVector3D> sizeMeshs;
+    std::unordered_map<unsigned int, QVector3D> positionMeshs;
 };
 
 #endif
