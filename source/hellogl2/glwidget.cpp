@@ -234,7 +234,7 @@ Container* loadMultiplesMesh(std::string filename, Pool* poolFiles) {
 
     if (loadout)
     {
-        std::cout << "nombre de mesh : " << Loader.LoadedMeshes.size() << std::endl;
+      //  std::cout << "nombre de mesh : " << Loader.LoadedMeshes.size() << std::endl;
         for (int i = 0; i < Loader.LoadedMeshes.size(); i++)
         {
 
@@ -261,7 +261,7 @@ Container* loadMultiplesMesh(std::string filename, Pool* poolFiles) {
             newMesh.texCoord = texCoord;
             newMesh.indices = curMesh.Indices;
             Mesh* mesh = new Mesh(filename+curMesh.MeshName,newMesh, poolFiles, "../forest/" + curMesh.MeshMaterial.map_Kd);
-            std::cout << "nom texture : " << curMesh.MeshMaterial.map_Kd << std::endl;
+           // std::cout << "nom texture : " << curMesh.MeshMaterial.map_Kd << std::endl;
             bigMeshs->addChild(mesh);
         }
     }
@@ -533,7 +533,7 @@ void GLWidget::paintGL()
     Collision* c = new Collision();
     bool collision = c->detectCollision(camera->getPosition(),world,sizeMeshs);
     this->canMove = !collision;
-    qDebug() << "Collision : " << collision << "\n";
+    //qDebug() << "Collision : " << collision << "\n";
     if(collision){
         float y = camera->transform.y;
         QVector3D toutdroit(0,0,0.02);
