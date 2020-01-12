@@ -130,6 +130,9 @@ private:
     Light* light1;
     Light* light2;
 
+    int H = 1080;
+    int W = 1920;
+
     
     QOpenGLTexture* m_texture_location;
     QOpenGLTexture* m_texture_location1;
@@ -138,6 +141,7 @@ private:
     QOpenGLVertexArrayObject m_vao;
     QOpenGLBuffer m_vertexvbo;
     QOpenGLShaderProgram *m_program;
+    QCursor cursor;
 
     bool isUp = false;
     bool isDown = false;

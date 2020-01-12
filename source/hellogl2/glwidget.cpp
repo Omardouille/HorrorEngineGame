@@ -82,6 +82,8 @@ GLWidget::GLWidget(QWidget *parent, int nFPS)
       FPS(nFPS)
 {
     setFocusPolicy(Qt::StrongFocus);
+    cursor = QCursor(Qt::BlankCursor);
+    this->setCursor(cursor);
 }
 
 GLWidget::~GLWidget()
@@ -301,6 +303,39 @@ bool checkCollision(Container* parent, QVector3D & pbb, QVector3D & pBB) {
 // Update General
 void GLWidget::timerEvent(QTimerEvent *)
 {
+
+
+    //cursor.setPos(0,0);
+
+    float dx = cursor.pos().x() - m_lastPos.x();
+    float dy = cursor.pos().y() - m_lastPos.y();
+
+    dx *= 2560/W;
+    dy *= 1440/H;
+    double sensi = 0.05;
+
+
+    QQuaternion t = camera->transform.getR();
+    QVector3D euler = t.toEulerAngles();
+
+    double pitch = clamp( (euler[0]-sensi*dy), -89., 89.);
+    double yaw = euler[1]-sensi*dx;
+
+
+    QQuaternion e = QQuaternion::fromEulerAngles(pitch, yaw, euler[2]);
+
+
+    e.normalize();
+    camera->transform.setR(e);
+    m_lastPos = cursor.pos();
+
+    if(cursor.pos().x() > W-100 || cursor.pos().x() < W+100 || cursor.pos().y() > H-100 || cursor.pos().y() < H+100) {
+        cursor.setPos(this->geometry().center());
+        m_lastPos = this->geometry().center();
+    }
+
+
+
     // Ordre de notre update 
     // On recupère les inputs 
     // On avance
@@ -337,6 +372,7 @@ void GLWidget::timerEvent(QTimerEvent *)
         camera->transform.x = x;
         camera->transform.z = z;
     }
+    
         
 
     update();
@@ -401,19 +437,26 @@ void GLWidget::resizeGL(int w, int h)
 {
     m_proj.setToIdentity();
     m_proj.perspective(45.0f, GLfloat(w) / h, 0.01f, 100000.0f);
+    W = w;
+    H = h;
 }
 
 void GLWidget::mousePressEvent(QMouseEvent *event)
 {
-    m_lastPos = event->pos();
+  //  m_lastPos = event->pos();
 }
 
 void GLWidget::mouseMoveEvent(QMouseEvent *event)
 {
-    int dx = event->pos().x() - m_lastPos.x();
-    int dy = event->pos().y() - m_lastPos.y();
+    /*
+            cursor.setPos(0,0);
 
-    double sensi = 0.5;
+    float dx = event->pos().x() - m_lastPos.x();
+    float dy = event->pos().y() - m_lastPos.y();
+
+    dx *= 2560/W;
+    dy *= 1440/H;
+    double sensi = 0.05;
 
 
     QQuaternion t = camera->transform.getR();
@@ -431,4 +474,5 @@ void GLWidget::mouseMoveEvent(QMouseEvent *event)
 
 
     m_lastPos = event->pos();
+    */
 }
