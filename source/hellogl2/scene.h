@@ -92,6 +92,8 @@ public:
 
     void getAABB(QVector3D & bb, QVector3D & BB);
 
+    bool isCollider = true;
+
 
 protected:
     unsigned int Mesh_ID;

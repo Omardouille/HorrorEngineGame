@@ -216,9 +216,12 @@ void GLWidget::initializeGL()
     root = new Container();
 
     skybox = new Skybox(poolFiles, "../vertex_shader_skybox.glsl", "../fragment_shader_skybox.glsl");
-    camera = new Camera();
-    camera->transform.y = 0.51;
-    root->addChild(camera);
+
+
+    parentCamera = new Container();
+    parentCamera->transform.rotate(45, 1,0,0);
+    parentCamera->transform.y = 0.51;
+    root->addChild(parentCamera);
 
 
     light1 = new Light(POINT_LIGHT, QVector3D(0.1,0.1,0.1), QVector3D(0.6,0.6,0.6), QVector3D(0.1,0.1,0.1));
@@ -238,14 +241,16 @@ void GLWidget::initializeGL()
     root->addChild(voila);
 
 
-/*
-    // On crée le soleil
-    soleil = new Mesh("../flashlight.obj", QVector3D(-1,-1,-1), poolFiles, "../flashlight.png");
-    // On met enfant
-    soleil->transform.scale(0.05);
-    soleil->transform.rotate(90, 0,0,1);
-    root->addChild(systemesolaire);
-*/
+
+    flashlight = new Mesh("../flashlight.obj", QVector3D(-1,-1,-1), poolFiles, "../flashlight.png");
+    flashlight->transform.scale(0.005);
+    flashlight->transform.rotate(180, 0,0,1);
+    flashlight->transform.rotate(-100, 1,0,0);
+    flashlight->transform.y = -0.08;
+    flashlight->transform.z = -0.22;
+    flashlight->transform.x = 0.1;
+    parentCamera->addChild(flashlight);
+
 
 
 
@@ -283,16 +288,19 @@ void GLWidget::moveCamera(int pos) {
 bool checkCollision(Container* parent, QVector3D & pbb, QVector3D & pBB) {
     for(Object* o : parent->children) {
         if(instanceof<Mesh>(o)) {
-            // results.push_back(dynamic_cast<Mesh*>(o));
             QVector3D bb; QVector3D BB;
             dynamic_cast<Mesh*>(o)->getAABB(bb, BB);
+            if(dynamic_cast<Mesh*>(o)->isCollider == false)
+                continue;
+
             if( ( ( (bb[0] <= pbb[0]) && (bb[1] <= pbb[1]) && (bb[2] <= pbb[2]) ) && ( (BB[0] >= pBB[0]) && (BB[1] >= pBB[1]) && (BB[2] >= pBB[2]) )  ) 
                 || ( ( (bb[0] <= pbb[0]) && (bb[1] <= pbb[1]) && (bb[2] <= pbb[2]) ) && ( (BB[0] >= pBB[0]) && (BB[1] >= pBB[1]) && (BB[2] >= pBB[2]) )  ) ) {
                     return true;
             }
 
         } else if(instanceof<Container>(o)) {
-            return checkCollision(dynamic_cast<Container*>(o), pbb, pBB);
+            if(checkCollision(dynamic_cast<Container*>(o), pbb, pBB))
+                return true;
         }
     }
 
@@ -304,9 +312,7 @@ bool checkCollision(Container* parent, QVector3D & pbb, QVector3D & pBB) {
 void GLWidget::timerEvent(QTimerEvent *)
 {
 
-
-    //cursor.setPos(0,0);
-
+    // Systeme souris
     float dx = cursor.pos().x() - m_lastPos.x();
     float dy = cursor.pos().y() - m_lastPos.y();
 
@@ -315,7 +321,7 @@ void GLWidget::timerEvent(QTimerEvent *)
     double sensi = 0.05;
 
 
-    QQuaternion t = camera->transform.getR();
+    QQuaternion t = parentCamera->transform.getR();
     QVector3D euler = t.toEulerAngles();
 
     double pitch = clamp( (euler[0]-sensi*dy), -89., 89.);
@@ -326,7 +332,7 @@ void GLWidget::timerEvent(QTimerEvent *)
 
 
     e.normalize();
-    camera->transform.setR(e);
+    parentCamera->transform.setR(e);
     m_lastPos = cursor.pos();
 
     if(cursor.pos().x() > W-100 || cursor.pos().x() < W+100 || cursor.pos().y() > H-100 || cursor.pos().y() < H+100) {
@@ -339,24 +345,28 @@ void GLWidget::timerEvent(QTimerEvent *)
     // Ordre de notre update 
     // On recupère les inputs 
     // On avance
+
     QVector3D toutdroit(0,0,0.02);
     QVector3D agauche(0.02,0,0);
-    float y = camera->transform.y;
-    float x = camera->transform.x;
-    float z = camera->transform.z;
+   // QVector3D toutdroit = camera->transform.getR().rotatedVector(QVector3D(0,0,0.02));
+   // QVector3D agauche = camera->transform.getR().rotatedVector(QVector3D(0.02,0,0));
+
+    float y = parentCamera->transform.y;
+    float x = parentCamera->transform.x;
+    float z = parentCamera->transform.z;
     if(isUp){
-        camera->transform.translate(-toutdroit[0], -toutdroit[1], -toutdroit[2]);
+        parentCamera->transform.translate(-toutdroit[0], -toutdroit[1], -toutdroit[2]);
     }
     else if(isLeft){
-        camera->transform.translate(-agauche[0], -agauche[1], -agauche[2]);
+        parentCamera->transform.translate(-agauche[0], -agauche[1], -agauche[2]);
     }
     else if(isRight){
-        camera->transform.translate(agauche[0], agauche[1], agauche[2]);
+        parentCamera->transform.translate(agauche[0], agauche[1], agauche[2]);
     }
     else if(isDown) {
-        camera->transform.translate(toutdroit[0], toutdroit[1], toutdroit[2]);
+        parentCamera->transform.translate(toutdroit[0], toutdroit[1], toutdroit[2]);
     }
-    camera->transform.y = y; // Le y change pas de base
+    parentCamera->transform.y = y; // Le y change pas de base
 
     // On va check les collisions
     // Et on va reculer dans la direction que l'on est venu sinon
@@ -364,13 +374,13 @@ void GLWidget::timerEvent(QTimerEvent *)
     std::vector<Mesh*> allMeshs;
     // On recupère le bb du joueur
     QVector3D pbb; QVector3D pBB;
-    pbb = camera->getPosition() - QVector3D(0.02f, 0.5f, 0.0f);
-    pBB = camera->getPosition() + QVector3D(0.02f, 0.5f, 0.0f);
+    pbb = parentCamera->getPosition() - QVector3D(0.02f, 0.5f, 0.0f);
+    pBB = parentCamera->getPosition() + QVector3D(0.02f, 0.5f, 0.0f);
 
     if(checkCollision(root, pbb, pBB)) {
-        camera->transform.y = y;
-        camera->transform.x = x;
-        camera->transform.z = z;
+        parentCamera->transform.y = y;
+        parentCamera->transform.x = x;
+        parentCamera->transform.z = z;
     }
     
         
@@ -396,8 +406,8 @@ void GLWidget::paintGL()
     lights.push_back(light1);
     lights.push_back(light2);
 
-    QMatrix4x4 im = camera->getTotalInvertedMatrix();
-    QVector3D p = camera->getPosition();
+    QMatrix4x4 im = parentCamera->getTotalInvertedMatrix();
+    QVector3D p = parentCamera->getPosition();
 
     glDepthMask(GL_FALSE);
     skybox->draw(m_proj, im, p, lights);

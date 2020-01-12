@@ -117,7 +117,7 @@ private:
     Container* systemesolaire;
     Container* systemeterrestre;
     Mesh* lune;
-    Mesh* soleil;
+    Mesh* flashlight;
     Mesh* terre;
     Camera* camera;
     Container* root;
