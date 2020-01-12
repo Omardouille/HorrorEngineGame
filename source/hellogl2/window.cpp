@@ -72,6 +72,7 @@ Window::Window(MainWindow *mw, int nFPS)
     QVBoxLayout *mainLayout = new QVBoxLayout;
     QHBoxLayout *container = new QHBoxLayout;
     mainLayout->addWidget(glWidget);
+    mainLayout->setContentsMargins(0,0,0,0);
 
 
 

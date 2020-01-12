@@ -88,14 +88,17 @@ int main(int argc, char *argv[])
     QSurfaceFormat::setDefaultFormat(fmt);
 
     MainWindow mainWindow;
+/*
     mainWindow.resize(mainWindow.sizeHint());
     int desktopArea = QApplication::desktop()->width() *
                      QApplication::desktop()->height();
     int widgetArea = mainWindow.width() * mainWindow.height();
+    */
 
     mainWindow.showMaximized();
+    mainWindow.setWindowFlags(Qt::CustomizeWindowHint | Qt::FramelessWindowHint);
 
-   // mainWindow.showFullScreen();
+    mainWindow.showFullScreen();
     mainWindow.setMouseTracking(true);
     return app.exec();
 }
