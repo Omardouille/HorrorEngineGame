@@ -441,8 +441,9 @@ namespace objl
 
 
 			std::ifstream file(Path);
-			char Buffer[20000];
-			file.rdbuf()->pubsetbuf(Buffer, 20000);
+			//char Buffer[20000];
+			//file.rdbuf()->pubsetbuf(Buffer, 20000);
+  			std::ios_base::sync_with_stdio(false);
 
 			if (!file.is_open())
 				return false;
