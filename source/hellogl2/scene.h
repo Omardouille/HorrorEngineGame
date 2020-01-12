@@ -38,17 +38,6 @@ public :
         return m_world;
     }
     QMatrix4x4 getTotalInvertedMatrix() {
-
-        /*
-        QMatrix4x4 m_world;
-        Object* nav = this;
-        while(nav != nullptr) {
-            m_world = m_world*nav->transform.inverse().getMatrix();
-            nav = nav->parent;
-        }
-        */
-
-
         return getTotalMatrix().inverted();
     }
     QVector3D getPosition() {

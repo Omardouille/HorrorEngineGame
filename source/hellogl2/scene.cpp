@@ -79,6 +79,7 @@ Mesh::Mesh(std::string name, std::vector<QVector3D> v, std::vector<QVector3D> n,
 
 Mesh::Mesh(std::string name, MeshRaw meshraw,  Pool* poolFiles, std::string textureFile, std::string vertexShader , std::string fragmentShader){
     Mesh_ID = poolFiles->loadMesh(name, meshraw);
+    std::cout << "MESHID : " << Mesh_ID << "\n";
     ShaderV_ID = poolFiles->loadShader(QOpenGLShader::Vertex, vertexShader);
     ShaderF_ID = poolFiles->loadShader(QOpenGLShader::Fragment, fragmentShader);
     Texture_ID = poolFiles->loadTexture(textureFile);
@@ -178,25 +179,6 @@ Skybox::Skybox(Pool* poolFiles, std::string vertexShader, std::string fragmentSh
 //https://amin-ahmadi.com/2019/07/28/creating-a-skybox-using-c-qt-and-opengl/
 
     // On charge les textures
-    /*
-    const QImage posx = QImage("../hills_lf.png").convertToFormat(QImage::Format_RGBA8888); // r
-    const QImage negx = QImage("../hills_rt.png").convertToFormat(QImage::Format_RGBA8888); // l
-
-    const QImage posy = QImage("../hills_up.png").convertToFormat(QImage::Format_RGBA8888); // t
-    const QImage negy = QImage("../hills_dn.png").convertToFormat(QImage::Format_RGBA8888); // b
-
-    const QImage posz = QImage("../hills_ft.png").convertToFormat(QImage::Format_RGBA8888); // front
-    const QImage negz = QImage("../hills_bk.png").convertToFormat(QImage::Format_RGBA8888); // Bac
-
-
-    const QImage posx = QImage("../left.png").convertToFormat(QImage::Format_RGBA8888); // r
-    const QImage negx = QImage("../right.png").convertToFormat(QImage::Format_RGBA8888); // l
-
-    const QImage posy = QImage("../up.png").convertToFormat(QImage::Format_RGBA8888); // t
-    const QImage negy = QImage("../bottom.png").convertToFormat(QImage::Format_RGBA8888); // b
-
-    const QImage posz = QImage("../down.png").convertToFormat(QImage::Format_RGBA8888); // front
-    const QImage negz = QImage("../top.png").convertToFormat(QImage::Format_RGBA8888); // Bac */
 
     const QImage posx = QImage("../nightsky1_left.png").convertToFormat(QImage::Format_RGBA8888); // r
     const QImage negx = QImage("../nightsky1_right.png").convertToFormat(QImage::Format_RGBA8888); // l

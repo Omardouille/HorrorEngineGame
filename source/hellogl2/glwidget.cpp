@@ -117,119 +117,14 @@ void GLWidget::cleanup()
     doneCurrent();*/
 }
 
-
-Container* loadMultObj(std::string filename, Pool* poolFiles, std::string vertexShader, std::string fragmentShader) {
-
-
-    std::ifstream myfile;
-    myfile.open(filename.c_str());
-    if (!myfile.is_open())
-    {
-        std::cout << filename << " cannot be opened" << std::endl;
-    }
-
-    Container* bigMeshs = new Container();
-
-
-    bool ok = true;
-    std::string name = "";
-    std::vector<QVector3D>  vertices;
-    std::vector< std::vector< typeMesh > >  faces;
-    std::vector<QVector3D> normals;
-    std::vector<QVector2D>  texcoords;
-
-    unsigned int offsetVertices = 0;
-    unsigned int offsetNormals = 0;
-    unsigned int offsetTexc = 0;
-
-    // Pour chaque ligne avec un o
-    while( myfile.good() )
-    {
-
-
-
-
-
-
-
-        std::string line;
-        getline (myfile,line);
-        QString QTLine = QString::fromStdString( line );
-        QRegExp reg("\\s+");
-        QStringList lineElements = QTLine.split(reg);
-
-        if(  lineElements.size() > 0  )
-        {
-            QString elementType = lineElements[0];
-
-            if ( elementType == QString("o") )
-            {
-
-                if(ok) {
-                    ok = false;
-                    name = lineElements[1].toStdString();
-                    continue;
-                }
-
-                Mesh* newMesh = new Mesh(name, vertices, normals, faces, texcoords, QVector3D(-1,-1,-1), poolFiles, "../cottage_diffuse.png", vertexShader, fragmentShader); // materials
-                bigMeshs->addChild(newMesh);
-                name = lineElements[1].toStdString();
-                offsetVertices += vertices.size();
-                offsetNormals += normals.size();
-                offsetTexc += texcoords.size();
-                vertices.clear();
-                faces.clear();
-                normals.clear();
-                texcoords.clear();
-            }
-            // vertex
-            if ( elementType == QString("v") )
-            {
-                vertices.push_back(QVector3D( lineElements[1].toDouble() , lineElements[2].toDouble() , lineElements[3].toDouble() ));
-            }
-            // normals
-            if ( elementType == QString("vn") )
-            {
-                normals.push_back(QVector3D( lineElements[1].toDouble() , lineElements[2].toDouble() , lineElements[3].toDouble() ));
-            }
-
-            if ( elementType == QString("vt") )
-            {
-                texcoords.push_back(QVector2D( lineElements[1].toDouble() , lineElements[2].toDouble()));
-            }
-            else if ( elementType == QString("f") )
-            {
-                std::vector< typeMesh > vhandles;
-                for( int i = 1 ; i < lineElements.size() ; ++i ) {
-                    QStringList FaceElements = lineElements[i].split("/", QString::SkipEmptyParts);
-                    if( FaceElements.size() > 0 ) {
-                        if(FaceElements.size() <= 2)
-                            vhandles.push_back( { (unsigned int)( (abs(FaceElements[0].toInt()) - 1)-offsetVertices ), (unsigned int)( (abs(FaceElements[1].toInt()) - 1)-offsetNormals ), (unsigned int)0 } );
-                        else
-                            vhandles.push_back( { (unsigned int)( (abs(FaceElements[0].toInt()) - 1)-offsetVertices ), (unsigned int)( (abs(FaceElements[2].toInt()) - 1)-offsetNormals ), (unsigned int)( (abs(FaceElements[1].toInt()) - 1)-offsetTexc )} );
-                    }
-                }
-
-                if (vhandles.size()==3)
-                {
-                    faces.push_back(vhandles);
-                }
-            }
-        }
-    }
-
-    Mesh* newMesh = new Mesh(name, vertices, normals, faces, texcoords, QVector3D(-1,-1,-1), poolFiles, "../cottage_diffuse.png", vertexShader, fragmentShader); // materials
-    bigMeshs->addChild(newMesh);
-    myfile.close();
-
-    return bigMeshs;
-}
-
+// On charge un obj qui en contient plusieurs
 Container* loadMultiplesMesh(std::string filename, Pool* poolFiles) {
 
     Container* bigMeshs = new Container();
     objl::Loader Loader;
+    qDebug("On Load File\n");
     bool loadout = Loader.LoadFile(filename);
+    qDebug("Finish\n");
 
 
     if (loadout)
@@ -237,23 +132,39 @@ Container* loadMultiplesMesh(std::string filename, Pool* poolFiles) {
       //  std::cout << "nombre de mesh : " << Loader.LoadedMeshes.size() << std::endl;
         for (int i = 0; i < Loader.LoadedMeshes.size(); i++)
         {
-
+            //Debug() << i << " - " << Loader.LoadedMeshes.size() << std::endl;
             objl::Mesh curMesh = Loader.LoadedMeshes[i];
+            
+            /*
+            std::unordered_map<std::string, unsigned int> & strToId = poolFiles->strToId;
+            if(strToId.find(name) != strToId.end())
+                return strToId.at(name);
+            */
 
             std::vector<QVector3D> vertex;
             std::vector<QVector3D> normals;
             std::vector<QVector2D> texCoord;
+
 
             for(int j=0;j<curMesh.Vertices.size();j++){
                 QVector3D v =  QVector3D(curMesh.Vertices[j].Position.X, curMesh.Vertices[j].Position.Y, curMesh.Vertices[j].Position.Z);
                 vertex.push_back(v);
                 QVector3D n = QVector3D(curMesh.Vertices[j].Normal.X,curMesh.Vertices[j].Normal.Y,curMesh.Vertices[j].Normal.Z);
                 normals.push_back(n);
-                //qDebug() << curMesh.Vertices[j].TextureCoordinate.X;
                 QVector2D t = QVector2D(curMesh.Vertices[j].TextureCoordinate.X, curMesh.Vertices[j].TextureCoordinate.Y);
                 texCoord.push_back(t);
             }
 
+            
+            QVector3D barycentre(0,0,0);
+            for(QVector3D vi : vertex) {
+                barycentre += vi;
+            }
+            barycentre /= vertex.size();
+            for(QVector3D & vi : vertex) {
+                vi -= barycentre;
+            }
+            
 
             MeshRaw newMesh;
             newMesh.normals = normals;
@@ -261,6 +172,7 @@ Container* loadMultiplesMesh(std::string filename, Pool* poolFiles) {
             newMesh.texCoord = texCoord;
             newMesh.indices = curMesh.Indices;
             Mesh* mesh = new Mesh(filename+curMesh.MeshName,newMesh, poolFiles, "../forest/" + curMesh.MeshMaterial.map_Kd);
+            mesh->transform.translate(barycentre[0], barycentre[1], barycentre[2]);
            // std::cout << "nom texture : " << curMesh.MeshMaterial.map_Kd << std::endl;
             bigMeshs->addChild(mesh);
         }
@@ -268,6 +180,7 @@ Container* loadMultiplesMesh(std::string filename, Pool* poolFiles) {
 
     return bigMeshs;
 }
+
 
 
 float min(std::vector<float> v){
@@ -314,7 +227,7 @@ void GLWidget::initializeGL()
     root->addChild(camera);
 
 
-   light1 = new Light(POINT_LIGHT, QVector3D(0.1,0.1,0.1), QVector3D(0.6,0.6,0.6), QVector3D(0.1,0.1,0.1));
+    light1 = new Light(POINT_LIGHT, QVector3D(0.1,0.1,0.1), QVector3D(0.6,0.6,0.6), QVector3D(0.1,0.1,0.1));
     light1->transform.translate(0, 2, 0);
     light1->transform.rotate(135,1,0,0);
     root->addChild(light1);
@@ -325,10 +238,10 @@ void GLWidget::initializeGL()
     light2->transform.rotate(135,1,0,0);
     root->addChild(light2);
 
-    //Container* voila = loadMultObj("../salutobj.obj", poolFiles, "../vertex_shader.glsl", "../fragment_shader.glsl");
-
     //Container* voila = loadMultiplesMesh("../salutobj.obj",poolFiles);
     Container* voila = loadMultiplesMesh("../forest/forest.obj",poolFiles);
+
+
     root->addChild(voila);
 
 //collision

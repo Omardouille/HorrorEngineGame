@@ -59,9 +59,9 @@ class Pool
 {
 public:
     Pool() {}
-    //Container* loadMultiplesMesh(std::string filename);
 
-    unsigned int loadMesh(std::string name, MeshRaw meshraw);
+    //Container* loadMultiplesMesh(std::string filename, Pool* poolFiles);
+    unsigned int loadMesh(std::string name, MeshRaw & meshraw);
     unsigned int loadMesh(std::string name, std::vector<QVector3D> v, std::vector<QVector3D> n, std::vector< std::vector< typeMesh > > tri, std::vector<QVector2D> t);
     unsigned int loadMesh(std::string meshFile);
     MeshRaw & getMeshFromID(unsigned int id);

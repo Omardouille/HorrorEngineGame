@@ -441,6 +441,8 @@ namespace objl
 
 
 			std::ifstream file(Path);
+			char Buffer[20000];
+			file.rdbuf()->pubsetbuf(Buffer, 20000);
 
 			if (!file.is_open())
 				return false;
