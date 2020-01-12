@@ -302,11 +302,6 @@ void GLWidget::initializeGL()
 
 
 
-    // Camera position principal.
-    m_camera.setToIdentity();
-    m_camera.translate(0, 0, -10);
-    m_camera.rotate(45, 1, 0, 0);
-
     QBasicTimer* timer = new QBasicTimer();
     timer->start( (1./(double)60)*1000., this);
 }
@@ -336,14 +331,23 @@ void GLWidget::moveCamera(int pos) {
 }
 
 
-bool checkCollision(Container* parent) {
+bool checkCollision(Container* parent, QVector3D & pbb, QVector3D & pBB) {
     for(Object* o : parent->children) {
         if(instanceof<Mesh>(o)) {
-            results.push_back(dynamic_cast<Mesh*>(o));
+            // results.push_back(dynamic_cast<Mesh*>(o));
+            QVector3D bb; QVector3D BB;
+            dynamic_cast<Mesh*>(o)->getAABB(bb, BB);
+            if( ( ( (bb[0] <= pbb[0]) && (bb[1] <= pbb[1]) && (bb[2] <= pbb[2]) ) && ( (BB[0] >= pBB[0]) && (BB[1] >= pBB[1]) && (BB[2] >= pBB[2]) )  ) 
+                || ( ( (bb[0] <= pbb[0]) && (bb[1] <= pbb[1]) && (bb[2] <= pbb[2]) ) && ( (BB[0] >= pBB[0]) && (BB[1] >= pBB[1]) && (BB[2] >= pBB[2]) )  ) ) {
+                    return true;
+            }
+
         } else if(instanceof<Container>(o)) {
-            return getAllMeshs(dynamic_cast<Container*>(o));
+            return checkCollision(dynamic_cast<Container*>(o), pbb, pBB);
         }
     }
+
+    return false;
 }
 
 
@@ -353,68 +357,40 @@ void GLWidget::timerEvent(QTimerEvent *)
     // Ordre de notre update 
     // On recupère les inputs 
     // On avance
-    if(canMove){
-        QVector3D toutdroit(0,0,0.02);
-        QVector3D agauche(0.02,0,0);
-        float y = camera->transform.y;
-        if(isUp){
-           camera->transform.translate(-toutdroit[0], -toutdroit[1], -toutdroit[2]);
-           strcpy(oldDirection,"up");
-        }
-        else if(isLeft){
-            camera->transform.translate(-agauche[0], -agauche[1], -agauche[2]);
-            strcpy(oldDirection,"left");
-        }
-        else if(isRight){
-            camera->transform.translate(agauche[0], agauche[1], agauche[2]);
-            strcpy(oldDirection,"right");
-        }
-        else if(isDown) {
-            camera->transform.translate(toutdroit[0], toutdroit[1], toutdroit[2]);
-            strcpy(oldDirection,"down");
-        }
-        camera->transform.y = y; // Le y change pas de base
+    QVector3D toutdroit(0,0,0.02);
+    QVector3D agauche(0.02,0,0);
+    float y = camera->transform.y;
+    float x = camera->transform.x;
+    float z = camera->transform.z;
+    if(isUp){
+        camera->transform.translate(-toutdroit[0], -toutdroit[1], -toutdroit[2]);
     }
+    else if(isLeft){
+        camera->transform.translate(-agauche[0], -agauche[1], -agauche[2]);
+    }
+    else if(isRight){
+        camera->transform.translate(agauche[0], agauche[1], agauche[2]);
+    }
+    else if(isDown) {
+        camera->transform.translate(toutdroit[0], toutdroit[1], toutdroit[2]);
+    }
+    camera->transform.y = y; // Le y change pas de base
 
     // On va check les collisions
     // Et on va reculer dans la direction que l'on est venu sinon
     // On recupère tous les meshs via le root
     std::vector<Mesh*> allMeshs;
-    getAllMeshs(root, allMeshs);
+    // On recupère le bb du joueur
+    QVector3D pbb; QVector3D pBB;
+    pbb = camera->getPosition() - QVector3D(0.02f, 0.5f, 0.0f);
+    pBB = camera->getPosition() + QVector3D(0.02f, 0.5f, 0.0f);
 
-    QVector3D bb; QVector3D BB;
-
-    for(int i = 0; i < allMeshs.size(); i++) {
-        allMeshs[i]->getAABB(bb, BB);
-    }
-    
-
-/*
-    Collision* c = new Collision();
-    bool collision = c->detectCollision(camera->getPosition(),world,sizeMeshs);
-    this->canMove = !collision;
-    */
-    //qDebug() << "Collision : " << collision << "\n";
-    //if(collision){
-        /*
-        float y = camera->transform.y;
-        QVector3D toutdroit(0,0,0.02);
-        QVector3D agauche(0.02,0,0);
-        if(strcmp(oldDirection, "up")==0){
-            camera->transform.translate(toutdroit[0], toutdroit[1], toutdroit[2]);
-        }
-        else if(strcmp(oldDirection, "left")==0){
-            camera->transform.translate(agauche[0], agauche[1], agauche[2]);
-        }
-        else if(strcmp(oldDirection, "right")==0){
-            camera->transform.translate(-agauche[0], -agauche[1], -agauche[2]);
-        }
-        else if(strcmp(oldDirection, "down")==0){
-            camera->transform.translate(-toutdroit[0], -toutdroit[1], -toutdroit[2]);
-        }
+    if(checkCollision(root, pbb, pBB)) {
         camera->transform.y = y;
-        */
-    //}
+        camera->transform.x = x;
+        camera->transform.z = z;
+    }
+        
 
     update();
     
