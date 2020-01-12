@@ -101,10 +101,10 @@ public:
     float & z = t[2];
 
 
+
+
     // Pour l'instant j'utilise pas interpolate
     // Transform interpolate_with(Transform & t, float k);
-
-
 
 };
 

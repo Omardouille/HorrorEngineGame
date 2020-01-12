@@ -67,6 +67,7 @@ constexpr const T& clamp( const T& v, const T& lo, const T& hi )
 
 bool GLWidget::m_transparent = false;
 
+
 GLWidget::GLWidget(QWidget *parent, int nFPS)
     : QOpenGLWidget(parent),
       m_xRot(0),
@@ -375,16 +376,6 @@ void GLWidget::initializeGL()
             //nothing
         }
     }
-    //std::unordered_map<unsigned int, QVector3D> world36 = this->positionMeshs;
-    /*
-     * Tu fais en sorte de bien charger les textures
-     *  tu regardes le pb de rotation
-     * tu remets la fonction ailleurs
-     * et tu remets le barycentrem ais en mettant bien lesp os
-     * /
-
-
-
  
 /*
    // On crée le systeme solaire
@@ -481,20 +472,28 @@ void GLWidget::autoCamera() {
 
 void GLWidget::timerEvent(QTimerEvent *)
 {
-    QVector3D toutdroit(0,0,0.2);
-    QVector3D agauche(0.2,0,0);
-    float y = camera->transform.y;
-    if(isUp)
-       camera->transform.translate(-toutdroit[0], -toutdroit[1], -toutdroit[2]);
-    else if(isLeft)
-        camera->transform.translate(-agauche[0], -agauche[1], -agauche[2]);
-    else if(isRight)
-        camera->transform.translate(agauche[0], agauche[1], agauche[2]);
-    else if(isDown) {
-        camera->transform.translate(toutdroit[0], toutdroit[1], toutdroit[2]);
-    } 
-    camera->transform.y = y;
-  
+    if(canMove){
+        QVector3D toutdroit(0,0,0.02);
+        QVector3D agauche(0.02,0,0);
+        float y = camera->transform.y;
+        if(isUp){
+           camera->transform.translate(-toutdroit[0], -toutdroit[1], -toutdroit[2]);
+           strcpy(oldDirection,"up");
+        }
+        else if(isLeft){
+            camera->transform.translate(-agauche[0], -agauche[1], -agauche[2]);
+            strcpy(oldDirection,"left");
+        }
+        else if(isRight){
+            camera->transform.translate(agauche[0], agauche[1], agauche[2]);
+            strcpy(oldDirection,"right");
+        }
+        else if(isDown) {
+            camera->transform.translate(toutdroit[0], toutdroit[1], toutdroit[2]);
+            strcpy(oldDirection,"down");
+        }
+        camera->transform.y = y;
+    }
 
     update();
     
@@ -533,9 +532,26 @@ void GLWidget::paintGL()
 
     Collision* c = new Collision();
     bool collision = c->detectCollision(camera->getPosition(),world,sizeMeshs);
+    this->canMove = !collision;
     qDebug() << "Collision : " << collision << "\n";
-
-
+    if(collision){
+        float y = camera->transform.y;
+        QVector3D toutdroit(0,0,0.02);
+        QVector3D agauche(0.02,0,0);
+        if(strcmp(oldDirection, "up")==0){
+            camera->transform.translate(toutdroit[0], toutdroit[1], toutdroit[2]);
+        }
+        else if(strcmp(oldDirection, "left")==0){
+            camera->transform.translate(agauche[0], agauche[1], agauche[2]);
+        }
+        else if(strcmp(oldDirection, "right")==0){
+            camera->transform.translate(-agauche[0], -agauche[1], -agauche[2]);
+        }
+        else if(strcmp(oldDirection, "down")==0){
+            camera->transform.translate(-toutdroit[0], -toutdroit[1], -toutdroit[2]);
+        }
+        camera->transform.y = y;
+    }
 
 }
 
