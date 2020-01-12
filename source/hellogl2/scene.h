@@ -90,6 +90,8 @@ public:
         return Mesh_ID;
     }
 
+    void getAABB(QVector3D & bb, QVector3D & BB);
+
 
 protected:
     unsigned int Mesh_ID;

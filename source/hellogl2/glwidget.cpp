@@ -65,6 +65,11 @@ constexpr const T& clamp( const T& v, const T& lo, const T& hi )
     return (v < lo) ? lo : (hi < v) ? hi : v;
 }
 
+template<typename Base, typename T>
+inline bool instanceof(const T *ptr) {
+    return dynamic_cast<const Base*>(ptr) != nullptr;
+}
+
 bool GLWidget::m_transparent = false;
 
 
@@ -155,7 +160,7 @@ Container* loadMultiplesMesh(std::string filename, Pool* poolFiles) {
                 texCoord.push_back(t);
             }
 
-            
+            /*
             QVector3D barycentre(0,0,0);
             for(QVector3D vi : vertex) {
                 barycentre += vi;
@@ -163,7 +168,7 @@ Container* loadMultiplesMesh(std::string filename, Pool* poolFiles) {
             barycentre /= vertex.size();
             for(QVector3D & vi : vertex) {
                 vi -= barycentre;
-            }
+            }*/
             
 
             MeshRaw newMesh;
@@ -172,7 +177,7 @@ Container* loadMultiplesMesh(std::string filename, Pool* poolFiles) {
             newMesh.texCoord = texCoord;
             newMesh.indices = curMesh.Indices;
             Mesh* mesh = new Mesh(filename+curMesh.MeshName,newMesh, poolFiles, "../forest/" + curMesh.MeshMaterial.map_Kd);
-            mesh->transform.translate(barycentre[0], barycentre[1], barycentre[2]);
+            //mesh->transform.translate(barycentre[0], barycentre[1], barycentre[2]);
            // std::cout << "nom texture : " << curMesh.MeshMaterial.map_Kd << std::endl;
             bigMeshs->addChild(mesh);
         }
@@ -205,13 +210,6 @@ float max(std::vector<float> v){
 
 void GLWidget::initializeGL()
 {
-    // In this example the widget's corresponding top-level window can change
-    // several times during the widget's lifetime. Whenever this happens, the
-    // QOpenGLWidget's associated context is destroyed and a new one is created.
-    // Therefore we have to be prepared to clean up the resources on the
-    // aboutToBeDestroyed() signal, instead of the destructor. The emission of
-    // the signal will be followed by an invocation of initializeGL() where we
-    // can recreate all resources.
     connect(context(), &QOpenGLContext::aboutToBeDestroyed, this, &GLWidget::cleanup);
 
 
@@ -238,13 +236,13 @@ void GLWidget::initializeGL()
     light2->transform.rotate(135,1,0,0);
     root->addChild(light2);
 
-    //Container* voila = loadMultiplesMesh("../salutobj.obj",poolFiles);
     Container* voila = loadMultiplesMesh("../forest/forest.obj",poolFiles);
 
 
     root->addChild(voila);
 
-//collision
+    // Initialisation collision
+    /*
     std::unordered_map<unsigned int, MeshRaw> meshs = poolFiles->getAllMeshs();
     for( const auto& m : meshs ) {
            MeshRaw mr = m.second;
@@ -289,49 +287,14 @@ void GLWidget::initializeGL()
             //nothing
         }
     }
- 
+    */
+
 /*
-   // On crée le systeme solaire
-    systemesolaire = new Container();
-    
-
-    Container* upSyst = new Container();
-    // enfant du systeme solaire
-    systemesolaire->addChild(upSyst);
-
-
-
-    // On crée le systeme terreste
-    systemeterrestre = new Container();
-    upSyst->addChild(systemeterrestre);
-
-
-
-    // On crée la terre
-    terre = new Mesh("../cube.obj", QVector3D(0,1,1), poolFiles);
-    terre->transform.scale(0.5);
-    // On penche la terre de 23 degrés ensuite
-    terre->transform.rotate(23, 0, 0 , 1);
-
-    // On le met en enfant du systeme terrestre
-    systemeterrestre->addChild(terre);
-
-
-
-    // On translate le systeme terrestre à distance du soleil
-    upSyst->transform.translate(3,0,0);
-
-
-
-
     // On crée le soleil
     soleil = new Mesh("../flashlight.obj", QVector3D(-1,-1,-1), poolFiles, "../flashlight.png");
     // On met enfant
     soleil->transform.scale(0.05);
     soleil->transform.rotate(90, 0,0,1);
-   //systemesolaire->addChild(soleil);
-
-
     root->addChild(systemesolaire);
 */
 
@@ -339,22 +302,15 @@ void GLWidget::initializeGL()
 
 
 
-    QBasicTimer* timer = new QBasicTimer();
-
-
-    // Our camera never changes in this example.
+    // Camera position principal.
     m_camera.setToIdentity();
     m_camera.translate(0, 0, -10);
     m_camera.rotate(45, 1, 0, 0);
 
-
+    QBasicTimer* timer = new QBasicTimer();
     timer->start( (1./(double)60)*1000., this);
 }
 
-void GLWidget::setupVertexAttribs()
-{
-
-}
 
 // Move camera, on bouge la camera en fonction des touches (on translate la camera)
 void GLWidget::moveCamera(int pos) {
@@ -379,12 +335,24 @@ void GLWidget::moveCamera(int pos) {
 
 }
 
-void GLWidget::autoCamera() {
-    isAuto = true;
+
+bool checkCollision(Container* parent) {
+    for(Object* o : parent->children) {
+        if(instanceof<Mesh>(o)) {
+            results.push_back(dynamic_cast<Mesh*>(o));
+        } else if(instanceof<Container>(o)) {
+            return getAllMeshs(dynamic_cast<Container*>(o));
+        }
+    }
 }
 
+
+// Update General
 void GLWidget::timerEvent(QTimerEvent *)
 {
+    // Ordre de notre update 
+    // On recupère les inputs 
+    // On avance
     if(canMove){
         QVector3D toutdroit(0,0,0.02);
         QVector3D agauche(0.02,0,0);
@@ -405,49 +373,30 @@ void GLWidget::timerEvent(QTimerEvent *)
             camera->transform.translate(toutdroit[0], toutdroit[1], toutdroit[2]);
             strcpy(oldDirection,"down");
         }
-        camera->transform.y = y;
+        camera->transform.y = y; // Le y change pas de base
     }
 
-    update();
+    // On va check les collisions
+    // Et on va reculer dans la direction que l'on est venu sinon
+    // On recupère tous les meshs via le root
+    std::vector<Mesh*> allMeshs;
+    getAllMeshs(root, allMeshs);
+
+    QVector3D bb; QVector3D BB;
+
+    for(int i = 0; i < allMeshs.size(); i++) {
+        allMeshs[i]->getAABB(bb, BB);
+    }
     
-}
 
-
-
-void GLWidget::paintGL()
-{
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    glEnable(GL_DEPTH_TEST);
-    glEnable(GL_CULL_FACE);
-
-
-    // On pourrait stocker les adresses des lumieres pour les recup direct
-    // C'est temporaire
-    // On pourrait calculer après directement les positions une fois avec les val nécessaires
-    std::vector<Object*> lights;
-    lights.push_back(light1);
-    lights.push_back(light2);
-
-
-
-    // on draw le systeme solaire
-    QMatrix4x4 im = camera->getTotalInvertedMatrix();
-    QVector3D p = camera->getPosition();
-
-
-    glDepthMask(GL_FALSE);
-    skybox->draw(m_proj, im, p, lights);
-    glDepthMask(GL_TRUE);
-    glEnable(GL_BLEND);
-    root->draw(m_proj, im, p, lights);
-    glDisable(GL_BLEND);
-
-
+/*
     Collision* c = new Collision();
     bool collision = c->detectCollision(camera->getPosition(),world,sizeMeshs);
     this->canMove = !collision;
+    */
     //qDebug() << "Collision : " << collision << "\n";
-    if(collision){
+    //if(collision){
+        /*
         float y = camera->transform.y;
         QVector3D toutdroit(0,0,0.02);
         QVector3D agauche(0.02,0,0);
@@ -464,7 +413,39 @@ void GLWidget::paintGL()
             camera->transform.translate(-toutdroit[0], -toutdroit[1], -toutdroit[2]);
         }
         camera->transform.y = y;
-    }
+        */
+    //}
+
+    update();
+    
+}
+
+
+// Paint = Rendu, ça se fait a la fin
+// Mais si on faisait bien on devrait afficher le rendu d'avant les calculs
+void GLWidget::paintGL()
+{
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glEnable(GL_DEPTH_TEST);
+    glEnable(GL_CULL_FACE);
+
+
+    // On pourrait stocker les adresses des lumieres pour les recup direct
+    // C'est temporaire
+    // On pourrait calculer après directement les positions une fois avec les val nécessaires
+    std::vector<Object*> lights;
+    lights.push_back(light1);
+    lights.push_back(light2);
+
+    QMatrix4x4 im = camera->getTotalInvertedMatrix();
+    QVector3D p = camera->getPosition();
+
+    glDepthMask(GL_FALSE);
+    skybox->draw(m_proj, im, p, lights);
+    glDepthMask(GL_TRUE);
+    glEnable(GL_BLEND);
+    root->draw(m_proj, im, p, lights);
+    glDisable(GL_BLEND);
 
 }
 

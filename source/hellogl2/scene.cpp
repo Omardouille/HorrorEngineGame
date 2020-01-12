@@ -79,7 +79,6 @@ Mesh::Mesh(std::string name, std::vector<QVector3D> v, std::vector<QVector3D> n,
 
 Mesh::Mesh(std::string name, MeshRaw meshraw,  Pool* poolFiles, std::string textureFile, std::string vertexShader , std::string fragmentShader){
     Mesh_ID = poolFiles->loadMesh(name, meshraw);
-    std::cout << "MESHID : " << Mesh_ID << "\n";
     ShaderV_ID = poolFiles->loadShader(QOpenGLShader::Vertex, vertexShader);
     ShaderF_ID = poolFiles->loadShader(QOpenGLShader::Fragment, fragmentShader);
     Texture_ID = poolFiles->loadTexture(textureFile);
@@ -93,6 +92,33 @@ Mesh::Mesh(std::string name, MeshRaw meshraw,  Pool* poolFiles, std::string text
 
 Mesh::~Mesh() {
     // On appelle un destroy du pool, que si il est a 0, alors ça detruit
+}
+
+void Mesh::getAABB(QVector3D & bb, QVector3D & BB) {
+
+    QVector3D tmpbb(9999,9999,9999);
+    QVector3D tmpBB(-9999,-9999,-9999);
+
+    for(QVector3D v : poolFiles->getMeshFromID(Mesh_ID).vertex) {
+        QVector3D tmpV = transform.getMatrix()*v;
+
+        if(tmpV[0] < tmpbb[0])
+            tmpbb[0] = tmpV[0];
+        if(tmpV[0] > tmpBB[0])
+            tmpBB[0] = tmpV[0];
+        if(tmpV[1] < tmpbb[1])
+            tmpbb[1] = tmpV[1];
+        if(tmpV[1] > tmpBB[1])
+            tmpBB[1] = tmpV[1];
+        if(tmpV[2] < tmpbb[2])
+            tmpbb[2] = tmpV[2];
+        if(tmpV[2] > tmpBB[2])
+            tmpBB[2] = tmpV[2];
+    }
+
+    bb = tmpbb;
+    BB = tmpBB;
+
 }
 
 

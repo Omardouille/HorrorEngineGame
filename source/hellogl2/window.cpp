@@ -134,7 +134,6 @@ void Window::moveCamera(int pos) {
 }
 
 void Window::autoCamera() {
-    glWidget->autoCamera();
 }
 
 void Window::dockUndock()

@@ -77,8 +77,6 @@ public:
     QSize minimumSizeHint() const override;
     QSize sizeHint() const override;
 
-    void autoCamera();
-    bool isAuto = false;
 
 
 public slots:
@@ -102,10 +100,9 @@ protected:
     void resizeGL(int width, int height) override;
     void mousePressEvent(QMouseEvent *event) override;
     void mouseMoveEvent(QMouseEvent *event) override;
-        void timerEvent(QTimerEvent *e) override;
+    void timerEvent(QTimerEvent *e) override;
 
 private:
-    void setupVertexAttribs();
     qreal angularSpeed;
         QQuaternion rotation;
     QBasicTimer timer;
