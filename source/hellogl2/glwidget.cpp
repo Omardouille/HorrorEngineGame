@@ -57,6 +57,7 @@
 #include <scene.h>
 #include "OBJ_Loader.h"
 #include "collision.h"
+#include <QPainter>
 
 template<class T>
 constexpr const T& clamp( const T& v, const T& lo, const T& hi )
@@ -217,6 +218,7 @@ void GLWidget::initializeGL()
 
     skybox = new Skybox(poolFiles, "../vertex_shader_skybox.glsl", "../fragment_shader_skybox.glsl");
 
+    ui = new UI(poolFiles, "../vertex_shader_ui.glsl", "../fragment_shader_ui.glsl");
 
     parentCamera = new Container();
     parentCamera->transform.rotate(45, 1,0,0);
@@ -258,8 +260,9 @@ void GLWidget::initializeGL()
     parentCamera->addChild(systemeflash);
 
 
-    light2 = new Light(SPOT_LIGHT, QVector3D(0.1,0.1,0.1), QVector3D(0.7,0.7,0.7), QVector3D(0.3,0.3,0.3));
-        light2->transform.rotate(180, 1,0,0);
+   // light2 = new Light(SPOT_LIGHT, QVector3D(0.1,0.1,0.1), QVector3D(0.7,0.7,0.7), QVector3D(0.3,0.3,0.3));
+    light2 = new FlashLight();
+    light2->transform.rotate(180, 1,0,0);
     //light2->transform.x = 1;
    // light2->transform.y = 1;
     parentCamera->addChild(light2);
@@ -278,6 +281,20 @@ void GLWidget::initializeGL()
 }
 
 
+void GLWidget::nextLight() {
+    if(light2 != nullptr) {
+        nmLight = (nmLight+1)%4;
+        if(nmLight == 1 && !hasOne)
+            nmLight = (nmLight+1)%4;
+        if(nmLight == 2 && !hasTwo)
+            nmLight = (nmLight+1)%4;
+        if(nmLight == 3 && !hasThree)
+            nmLight = (nmLight+1)%4;
+        ((FlashLight*) light2)->changeLight(nmLight);
+    }
+}
+
+
 // Move camera, on bouge la camera en fonction des touches (on translate la camera)
 void GLWidget::moveCamera(int pos) {
 
@@ -289,6 +306,8 @@ void GLWidget::moveCamera(int pos) {
         isRight = true;
     else if(pos == 2) {
         isDown = true;
+    } else if(pos == 4) {
+        nextLight();
     } else {
         isUp = false;
         isLeft = false;
@@ -434,7 +453,35 @@ void GLWidget::paintGL()
 
     glEnable(GL_BLEND);
     root->draw(m_proj, im, p, lights);
+    //glDisable(GL_BLEND);
+
+    // Ici on draw l'UI avec un quad pour afficher une image
+   // glEnable(GL_BLEND);
+   // ui->draw(m_proj, im, p, lights);
     glDisable(GL_BLEND);
+
+    // On disable depth pour le painter
+    glDepthMask(GL_FALSE);
+    glDisable(GL_DEPTH_TEST);
+    glDisable(GL_CULL_FACE);
+
+    // Qt il a un truc intégré, j'aimerais pas l'utilisé, je voulais juste pouvoir manipuler des images pour texture de l'ui
+    QPainter painter(this);
+
+    // Pas optimisé faudrait charger les images qu'une fois mais bon là on utilise temporairement le painter
+    if(hasOne)
+        painter.drawPixmap(width() - 260, height() - 100, 209/4, 360/4, QPixmap("../ui/b1.png"));
+    if(hasTwo)
+        painter.drawPixmap(width() - 180, height() - 100, 209/4, 360/4, QPixmap("../ui/b2.png"));
+    if(hasThree)
+        painter.drawPixmap(width() - 100, height() - 100, 209/4, 360/4, QPixmap("../ui/b3.png"));
+    painter.end();
+   
+
+
+
+
+    // On draw l'ui
 
 }
 

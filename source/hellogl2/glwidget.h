@@ -103,6 +103,7 @@ protected:
     void timerEvent(QTimerEvent *e) override;
     void keyPressEvent(QKeyEvent *e) override;
     void keyReleaseEvent(QKeyEvent *e) override;
+    void nextLight();
 
 private:
     qreal angularSpeed;
@@ -124,6 +125,7 @@ private:
     Container* parentCamera;
     Container* okk;
     Skybox* skybox;
+    UI* ui;
 
     Pool* poolFiles;
 
@@ -132,6 +134,12 @@ private:
 
     int H = 1080;
     int W = 1920;
+
+    // Player
+    bool hasOne = true;
+    bool hasTwo = true;
+    bool hasThree = true;
+    int nmLight = 0;
 
     
     QOpenGLTexture* m_texture_location;

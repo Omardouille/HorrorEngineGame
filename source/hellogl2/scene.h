@@ -123,6 +123,28 @@ protected:
 
 };
 
+class UI : public Object {
+public:
+    UI();
+    UI(Pool* poolFiles, std::string vertexShader = "../vertex_shader.glsl", std::string fragmentShader = "../fragment_shader.glsl");
+    ~UI();
+
+    void draw(QMatrix4x4 & m_proj, QMatrix4x4 & m_camera, QVector3D & posCamera, std::vector<Object*> & lights) override;
+
+protected:
+    unsigned int Texture_ID;
+    unsigned int ShaderF_ID;
+    unsigned int ShaderV_ID;
+    unsigned int Program_ID;
+        QVector3D color;
+    Pool* poolFiles;
+    QOpenGLTexture* texture; // Pas en pointer pour test
+    QOpenGLShaderProgram m_program;
+    QOpenGLVertexArrayObject m_vao;
+    QOpenGLBuffer m_vertex;
+
+};
+
 class Plan : public Mesh {
 public:
     Plan(float s, float decoupe, QVector3D color);
@@ -164,6 +186,31 @@ public:
     QVector3D ambient;
     QVector3D diffuse;
     QVector3D specular;
+
+};
+
+class FlashLight : public Light {
+public:
+    FlashLight() : Light(SPOT_LIGHT, QVector3D(0.1,0.1,0.1), QVector3D(0.6,0.6,0.6), QVector3D(0.1,0.1,0.1)) {
+        ambient = ambients[currentLight];
+        diffuse = diffuses[currentLight];
+        specular = speculars[currentLight];
+
+    }
+    ~FlashLight() {}
+
+    void changeLight(int i) {
+        currentLight = i;
+        ambient = ambients[currentLight];
+        diffuse = diffuses[currentLight];
+        specular = speculars[currentLight];
+    }
+
+    int currentLight = 0;
+    int nbLights = 4;
+    QVector3D ambients[4] = { QVector3D(0.1, 0.1, 0.1),  QVector3D(0.1, 0.1, 0.1), QVector3D(0.1, 0.1, 0.1), QVector3D(0.1, 0.1, 0.1)};
+    QVector3D diffuses[4] = { QVector3D(0.6, 0.6, 0.6), QVector3D(0.0, 0.0, 0.6),  QVector3D(0.6, 0.0, 0.0), QVector3D(0.0, 0.6, 0.0)};
+    QVector3D speculars[4] = { QVector3D(0.1, 0.1, 0.1),  QVector3D(0.1, 0.1, 0.1), QVector3D(0.1, 0.1, 0.1), QVector3D(0.1, 0.1, 0.1)};
 
 };
 
