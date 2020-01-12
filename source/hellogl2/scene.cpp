@@ -99,8 +99,9 @@ void Mesh::getAABB(QVector3D & bb, QVector3D & BB) {
     QVector3D tmpbb(9999,9999,9999);
     QVector3D tmpBB(-9999,-9999,-9999);
 
+    QMatrix4x4 tot = getTotalMatrix();
     for(QVector3D v : poolFiles->getMeshFromID(Mesh_ID).vertex) {
-        QVector3D tmpV = transform.getMatrix()*v;
+        QVector3D tmpV = tot*v;
 
         if(tmpV[0] < tmpbb[0])
             tmpbb[0] = tmpV[0];

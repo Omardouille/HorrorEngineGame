@@ -69,16 +69,7 @@ public:
     Window(MainWindow *mw, int nFPS);
     void autoCamera();
 
-protected:
-    void keyPressEvent(QKeyEvent *event) override;
-    void keyReleaseEvent(QKeyEvent *event) override;
-
-private slots:
-    void dockUndock();
-
 private:
-    QSlider *createSlider();
-    void moveCamera(int pos);
     GLWidget *glWidget;
     QSlider *xSlider;
     QSlider *ySlider;

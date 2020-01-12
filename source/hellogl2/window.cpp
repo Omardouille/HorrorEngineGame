@@ -71,15 +71,9 @@ Window::Window(MainWindow *mw, int nFPS)
 
     QVBoxLayout *mainLayout = new QVBoxLayout;
     QHBoxLayout *container = new QHBoxLayout;
-    container->addWidget(glWidget);
+    mainLayout->addWidget(glWidget);
 
 
-    QWidget *w = new QWidget;
-    w->setLayout(container);
-    mainLayout->addWidget(w);
-    dockBtn = new QPushButton(tr("Undock"), this);
-    connect(dockBtn, &QPushButton::clicked, this, &Window::dockUndock);
-    mainLayout->addWidget(dockBtn);
 
 
     setLayout(mainLayout);
@@ -87,75 +81,8 @@ Window::Window(MainWindow *mw, int nFPS)
     std::string title = "FPS : "+std::to_string(nFPS);
     setWindowTitle(tr(title.c_str()));
 
-    show();
-
-
-}
-
-QSlider *Window::createSlider()
-{
-    QSlider *slider = new QSlider(Qt::Vertical);
-    slider->setRange(0, 360 * 16);
-    slider->setSingleStep(16);
-    slider->setPageStep(15 * 16);
-    slider->setTickInterval(15 * 16);
-    slider->setTickPosition(QSlider::TicksRight);
-    return slider;
-}
-
-void Window::keyPressEvent(QKeyEvent *e)
-{
-    if (e->key() == Qt::Key_Escape)
-        close();
-    else if(e->key() == Qt::Key_Z)
-        moveCamera(0);
-    else if(e->key() == Qt::Key_Q)
-        moveCamera(1);
-    else if(e->key() == Qt::Key_S)
-        moveCamera(2);
-    else if(e->key() == Qt::Key_D)
-        moveCamera(3);
-    else if(e->key() == Qt::Key_A)
-        moveCamera(4);
-    else if(e->key() == Qt::Key_E)
-        moveCamera(5);
-    else
-        QWidget::keyPressEvent(e);
-}
-
-void Window::keyReleaseEvent(QKeyEvent *e)
-{
-        moveCamera(5);
+    //show();
+ 
 
 }
 
-void Window::moveCamera(int pos) {
-   glWidget->moveCamera(pos);
-}
-
-void Window::autoCamera() {
-}
-
-void Window::dockUndock()
-{
-    if (parent()) {
-        setParent(0);
-        setAttribute(Qt::WA_DeleteOnClose);
-        move(QApplication::desktop()->width() / 2 - width() / 2,
-             QApplication::desktop()->height() / 2 - height() / 2);
-        dockBtn->setText(tr("Dock"));
-        show();
-    } else {
-        if (!mainWindow->centralWidget()) {
-            if (mainWindow->isVisible()) {
-                setAttribute(Qt::WA_DeleteOnClose, false);
-                dockBtn->setText(tr("Undock"));
-                mainWindow->setCentralWidget(this);
-            } else {
-                QMessageBox::information(0, tr("Cannot dock"), tr("Main window already closed"));
-            }
-        } else {
-            QMessageBox::information(0, tr("Cannot dock"), tr("Main window already occupied"));
-        }
-    }
-}

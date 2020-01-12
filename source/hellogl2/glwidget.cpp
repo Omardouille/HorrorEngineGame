@@ -81,13 +81,7 @@ GLWidget::GLWidget(QWidget *parent, int nFPS)
       m_program(0),
       FPS(nFPS)
 {
-    // --transparent causes the clear color to be transparent. Therefore, on systems that
-    // support it, the widget will become transparent apart from the logo.
-    if (m_transparent) {
-        QSurfaceFormat fmt = format();
-        fmt.setAlphaBufferSize(8);
-        setFormat(fmt);
-    }
+    setFocusPolicy(Qt::StrongFocus);
 }
 
 GLWidget::~GLWidget()
@@ -241,53 +235,6 @@ void GLWidget::initializeGL()
 
     root->addChild(voila);
 
-    // Initialisation collision
-    /*
-    std::unordered_map<unsigned int, MeshRaw> meshs = poolFiles->getAllMeshs();
-    for( const auto& m : meshs ) {
-           MeshRaw mr = m.second;
-           std::vector<QVector3D> v = mr.vertex;
-           std::vector<float> x;
-           std::vector<float> y;
-           std::vector<float> z;
-           for(QVector3D vec3 : v){
-               x.push_back(vec3.x());
-               y.push_back(vec3.y());
-               z.push_back(vec3.z());
-           }
-           float xMin = min(x);
-           float xMax = max(x);
-           float yMin = min(y);
-           float yMax = max(y);
-           float zMin = min(z);
-           float zMax = max(z);
-           float height = fabs(yMax - yMin);
-           float widthX = fabs(xMax - xMin);
-           float widthZ = fabs(zMax - zMin);
-           sizeMeshs[m.first] = QVector3D(widthX,height,widthZ);
-           float xPos = xMin+widthX/2;
-           float zPos = zMin+widthZ/2;
-           positionMeshs[m.first] = QVector3D(xPos,0,zPos);
-        }
-    std::vector<Object*> childs = root->children;
-
-    for(Object* o : childs){
-        if(Container* con = dynamic_cast<Container*>(o)){
-            std::vector<Object*> childs2 = con->children;
-            for(Object* o2 : childs2){
-                if(Mesh* m2 = dynamic_cast<Mesh*>(o2)){
-                    world[m2->getMeshID()] = this->positionMeshs[m2->getMeshID()];
-                }
-            }
-        }
-        else if(Mesh* m = dynamic_cast<Mesh*>(o)){
-            world[m->getMeshID()] = this->positionMeshs[m->getMeshID()];
-        }
-        else{
-            //nothing
-        }
-    }
-    */
 
 /*
     // On crée le soleil
@@ -427,6 +374,29 @@ void GLWidget::paintGL()
 
 }
 
+
+void GLWidget::keyPressEvent(QKeyEvent *e)
+{
+    if(e->key() == Qt::Key_Z)
+        moveCamera(0);
+    else if(e->key() == Qt::Key_Q)
+        moveCamera(1);
+    else if(e->key() == Qt::Key_S)
+        moveCamera(2);
+    else if(e->key() == Qt::Key_D)
+        moveCamera(3);
+    else if(e->key() == Qt::Key_A)
+        moveCamera(4);
+    else if(e->key() == Qt::Key_E)
+        moveCamera(5);
+
+}
+
+void GLWidget::keyReleaseEvent(QKeyEvent *e)
+{
+    moveCamera(5);
+}
+
 void GLWidget::resizeGL(int w, int h)
 {
     m_proj.setToIdentity();
@@ -440,8 +410,8 @@ void GLWidget::mousePressEvent(QMouseEvent *event)
 
 void GLWidget::mouseMoveEvent(QMouseEvent *event)
 {
-    int dx = event->x() - m_lastPos.x();
-    int dy = event->y() - m_lastPos.y();
+    int dx = event->pos().x() - m_lastPos.x();
+    int dy = event->pos().y() - m_lastPos.y();
 
     double sensi = 0.5;
 

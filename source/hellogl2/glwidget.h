@@ -101,6 +101,8 @@ protected:
     void mousePressEvent(QMouseEvent *event) override;
     void mouseMoveEvent(QMouseEvent *event) override;
     void timerEvent(QTimerEvent *e) override;
+    void keyPressEvent(QKeyEvent *e) override;
+    void keyReleaseEvent(QKeyEvent *e) override;
 
 private:
     qreal angularSpeed;
@@ -119,7 +121,7 @@ private:
     Mesh* terre;
     Camera* camera;
     Container* root;
-    Container* test;
+    Container* parentCamera;
     Container* okk;
     Skybox* skybox;
 
