@@ -54,21 +54,23 @@ void main() {
     Light light = lights[i];
     highp vec3 lightDir;
     highp float attenuation = 1.0;
-    // 1 = point light, 0 = direcctionnal, 2 = pointlight
+    // 1 = point light, 0 = direcctionnal, 2 = spotlight
     if(light.type != 0) {
       lightDir = normalize(light.position - vert); // vecteur direction lumiere
       highp float distance = length(light.position - vert);
-      // attenuation = 1.0 / (light.constant + light.linear * distance + light.quadratic * (distance * distance));  
+      attenuation = 1.0 / (light.constant + light.linear * distance + light.quadratic * (distance * distance));  
     } else {
       lightDir = normalize(-light.direction); // vecteur direction lumiere  
     } 
     
     highp float theta = 0;
+    highp float intensity = 1.0;
     if(light.type == 2) {
       theta = dot(lightDir, normalize(-light.direction));
+      intensity = clamp((theta - 0.953) / (light.cutoff - 0.953), 0.0, 1.0);    
     }
 
-    if( (light.type == 2 && theta > light.cutoff) || light.type != 2) {
+    if( (light.type == 2 ) || light.type != 2) {
       highp vec3 viewDir = normalize(cameraPos - vert); // vecteur direction de la vue
       highp vec3 reflectDir = reflect(-lightDir, vertNormal); // vecteur direction de la reflexion
     //  highp float angle = dot(normalize(vertNormal), lightDir);
@@ -80,8 +82,9 @@ void main() {
 
       // highp vec3 col = clamp(color * 0.1 + color * 0.7 * diff + color * 0.3 * spec, 0.0, 1.0);
       highp vec3 ambient = c * light.ambient * attenuation;
-      highp vec3 diffuse = c * diff * light.diffuse * attenuation;
-      highp vec3 specular = c * spec * light.specular * attenuation;
+      highp vec3 diffuse = c * diff * light.diffuse * attenuation * intensity;
+      highp vec3 specular = c * spec * light.specular * attenuation * intensity;
+
 
       col += clamp(ambient+diffuse+specular, 0.0, 1.0);
     } else {

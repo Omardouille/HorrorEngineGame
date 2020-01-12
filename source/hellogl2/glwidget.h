@@ -115,7 +115,7 @@ private:
     int m_yRot;
     int m_zRot;
     Container* systemesolaire;
-    Container* systemeterrestre;
+    Container* systemeflash;
     Mesh* lune;
     Mesh* flashlight;
     Mesh* terre;

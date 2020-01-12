@@ -150,7 +150,14 @@ public:
 
     // On pourrait le mettre au truc davant
     QVector3D getDirection() {
-        return this->transform.getR().rotatedVector(QVector3D(0,0,1));
+        QVector3D m_world = QVector3D(0,0,1);
+        Object* nav = this;
+        while(nav != nullptr) {
+            m_world = nav->transform.getR().rotatedVector(m_world);
+            nav = nav->parent;
+        }
+        return m_world;
+        //return this->transform.getR().rotatedVector(QVector3D(0,0,1));
     }
 
     LType t;

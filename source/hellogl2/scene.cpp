@@ -161,7 +161,7 @@ void Mesh::draw(QMatrix4x4 & m_proj, QMatrix4x4 & m_camera, QVector3D & posCamer
         sprintf(buffer, "lights[%i].position", i);
         p->m_program->setUniformValue(buffer, tmpLight->getPosition());
         sprintf(buffer, "lights[%i].cutoff", i);
-        p->m_program->setUniformValue(buffer, (GLfloat)cos(12.5f/3.14159526535f*180.f));
+        p->m_program->setUniformValue(buffer, (GLfloat)cos(12.5f));
         sprintf(buffer, "lights[%i].ambient", i);
         p->m_program->setUniformValue(buffer, tmpLight->ambient);
         sprintf(buffer, "lights[%i].diffuse", i);

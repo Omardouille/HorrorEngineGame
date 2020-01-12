@@ -229,12 +229,12 @@ void GLWidget::initializeGL()
     light1->transform.rotate(135,1,0,0);
     root->addChild(light1);
 
-
+/*
     light2 = new Light(DIRECTIONAL_LIGHT, QVector3D(0.1,0.1,0.1), QVector3D(0.7,0.7,0.7), QVector3D(0.3,0.3,0.3));
     light2->transform.translate(10, 0, 0);
     light2->transform.rotate(135,1,0,0);
     root->addChild(light2);
-
+*/
     Container* voila = loadMultiplesMesh("../forest/forest.obj",poolFiles);
 
 
@@ -243,16 +243,33 @@ void GLWidget::initializeGL()
 
 
     flashlight = new Mesh("../flashlight.obj", QVector3D(-1,-1,-1), poolFiles, "../flashlight.png");
-    flashlight->transform.scale(0.005);
-    flashlight->transform.rotate(180, 0,0,1);
-    flashlight->transform.rotate(-100, 1,0,0);
-    flashlight->transform.y = -0.08;
-    flashlight->transform.z = -0.22;
-    flashlight->transform.x = 0.1;
-    parentCamera->addChild(flashlight);
+
+    systemeflash = new Container();
+    systemeflash->addChild(flashlight);
+
+    //systemeflash->addChild(light2);
+
+    systemeflash->transform.scale(0.005);
+    systemeflash->transform.rotate(180, 0,0,1);
+    systemeflash->transform.rotate(-100, 1,0,0);
+    systemeflash->transform.y = -0.08;
+    systemeflash->transform.z = -0.22;
+    systemeflash->transform.x = 0.1;
+    parentCamera->addChild(systemeflash);
 
 
+    light2 = new Light(SPOT_LIGHT, QVector3D(0.1,0.1,0.1), QVector3D(0.7,0.7,0.7), QVector3D(0.3,0.3,0.3));
+        light2->transform.rotate(180, 1,0,0);
+    //light2->transform.x = 1;
+   // light2->transform.y = 1;
+    parentCamera->addChild(light2);
 
+  //  root->addChild(light2);
+   
+   /* lune = new Mesh("../cube.obj", QVector3D(0.5,0.5,0.5), poolFiles, "../flashlight.png");
+    lune->transform.translate(1, 1, 0);
+    root->addChild(lune);
+    */
 
 
 
@@ -403,8 +420,9 @@ void GLWidget::paintGL()
     // C'est temporaire
     // On pourrait calculer après directement les positions une fois avec les val nécessaires
     std::vector<Object*> lights;
-    lights.push_back(light1);
+   // lights.push_back(light1);
     lights.push_back(light2);
+
 
     QMatrix4x4 im = parentCamera->getTotalInvertedMatrix();
     QVector3D p = parentCamera->getPosition();
