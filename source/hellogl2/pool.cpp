@@ -357,7 +357,6 @@ unsigned int Pool::loadTexture(std::string textureName) {
     TextureRaw newTexture;
     newTexture.texture = new QOpenGLTexture(QImage(textureName.c_str()).mirrored());
 
-
     strToId.insert({textureName, number});
     textures.insert({number, newTexture});
 

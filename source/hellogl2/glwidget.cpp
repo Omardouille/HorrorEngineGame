@@ -419,6 +419,8 @@ void GLWidget::paintGL()
     glDepthMask(GL_FALSE);
     skybox->draw(m_proj, im, p, lights);
     glDepthMask(GL_TRUE);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
     glEnable(GL_BLEND);
     root->draw(m_proj, im, p, lights);
     glDisable(GL_BLEND);
