@@ -46,7 +46,9 @@ void main() {
 
   if(c.x == -1) {
     c = texture(texture_diffuse, texc);
-    a = texture(texture_diffuse, texc).a;	
+    a = texture(texture_diffuse, texc).a;
+    if(a < 0.1)
+      discard;
   }
   
 
@@ -57,7 +59,7 @@ void main() {
     // 1 = point light, 0 = direcctionnal, 2 = spotlight
     if(light.type != 0) {
       lightDir = normalize(light.position - vert); // vecteur direction lumiere
-      highp float distance = length(light.position - vert);
+      highp float distance = length(light.position - vert)/2;
       attenuation = 1.0 / (light.constant + light.linear * distance + light.quadratic * (distance * distance));  
     } else {
       lightDir = normalize(-light.direction); // vecteur direction lumiere  

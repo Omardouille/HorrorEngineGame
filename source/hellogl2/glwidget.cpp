@@ -283,7 +283,6 @@ glsl bonne version
 
 Fog
 Animation marche
-Ramasse
 */
 
 void GLWidget::nextLight() {
@@ -352,6 +351,24 @@ bool checkCollision(Container* parent, QVector3D & pbb, QVector3D & pBB, Mesh* &
     return false;
 }
 
+void GLWidget::walkingAnimation(bool walking) {
+    // Hard coded mais bon faut avoir des choses à montrer
+    if(directionAnim && walking) {
+        parentCamera->transform.y += 0.02;
+    }
+    if(!directionAnim || !walking) {
+        parentCamera->transform.y -= 0.02;
+    }
+    if(parentCamera->transform.y > 0.8) {
+        directionAnim = false;
+    }
+    if(parentCamera->transform.y < 0.51) {
+        directionAnim = true;
+        parentCamera->transform.y = 0.51;
+    }
+
+}
+
 
 // Update General
 void GLWidget::timerEvent(QTimerEvent *)
@@ -391,8 +408,8 @@ void GLWidget::timerEvent(QTimerEvent *)
     // On recupère les inputs 
     // On avance
 
-    QVector3D toutdroit(0,0,0.02);
-    QVector3D agauche(0.02,0,0);
+    QVector3D toutdroit(0,0,speed);
+    QVector3D agauche(speed,0,0);
    // QVector3D toutdroit = camera->transform.getR().rotatedVector(QVector3D(0,0,0.02));
    // QVector3D agauche = camera->transform.getR().rotatedVector(QVector3D(0.02,0,0));
 
@@ -401,17 +418,29 @@ void GLWidget::timerEvent(QTimerEvent *)
     float z = parentCamera->transform.z;
     if(isUp){
         parentCamera->transform.translate(-toutdroit[0], -toutdroit[1], -toutdroit[2]);
+        parentCamera->transform.y = y;
+        walkingAnimation(true);
     }
     else if(isLeft){
         parentCamera->transform.translate(-agauche[0], -agauche[1], -agauche[2]);
+        parentCamera->transform.y = y;
+        walkingAnimation(true);
+
     }
     else if(isRight){
         parentCamera->transform.translate(agauche[0], agauche[1], agauche[2]);
+        parentCamera->transform.y = y;
+        walkingAnimation(true);
+
     }
     else if(isDown) {
         parentCamera->transform.translate(toutdroit[0], toutdroit[1], toutdroit[2]);
+        parentCamera->transform.y = y;
+        walkingAnimation(true);
+    } else {
+        parentCamera->transform.y = y;
+        walkingAnimation(false);
     }
-    parentCamera->transform.y = y; // Le y change pas de base
 
     // On va check les collisions
     // Et on va reculer dans la direction que l'on est venu sinon
@@ -432,6 +461,7 @@ void GLWidget::timerEvent(QTimerEvent *)
         returnObject->transform.y -= 1000;
         hasOne = true;
     }
+
     
         
 
@@ -532,36 +562,9 @@ void GLWidget::resizeGL(int w, int h)
 
 void GLWidget::mousePressEvent(QMouseEvent *event)
 {
-  //  m_lastPos = event->pos();
 }
 
 void GLWidget::mouseMoveEvent(QMouseEvent *event)
 {
-    /*
-            cursor.setPos(0,0);
-
-    float dx = event->pos().x() - m_lastPos.x();
-    float dy = event->pos().y() - m_lastPos.y();
-
-    dx *= 2560/W;
-    dy *= 1440/H;
-    double sensi = 0.05;
-
-
-    QQuaternion t = camera->transform.getR();
-    QVector3D euler = t.toEulerAngles();
-
-    double pitch = clamp( (euler[0]-sensi*dy), -89., 89.);
-    double yaw = euler[1]-sensi*dx;
-
-
-    QQuaternion e = QQuaternion::fromEulerAngles(pitch, yaw, euler[2]);
-
-
-    e.normalize();
-    camera->transform.setR(e);
-
-
-    m_lastPos = event->pos();
-    */
+  
 }

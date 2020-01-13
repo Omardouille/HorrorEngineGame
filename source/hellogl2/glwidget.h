@@ -104,8 +104,10 @@ protected:
     void keyPressEvent(QKeyEvent *e) override;
     void keyReleaseEvent(QKeyEvent *e) override;
     void nextLight();
+    void walkingAnimation(bool walking);
 
 private:
+    
     qreal angularSpeed;
         QQuaternion rotation;
     QBasicTimer timer;
@@ -140,6 +142,8 @@ private:
     bool hasTwo = false;
     bool hasThree = false;
     int nmLight = 0;
+    float speed = 0.05;
+    bool directionAnim = false;
 
     
     QOpenGLTexture* m_texture_location;
