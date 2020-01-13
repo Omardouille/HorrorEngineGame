@@ -107,6 +107,21 @@ protected:
 
 };
 
+class Pile : public Mesh {
+public:
+    Pile() {}
+    Pile(int type, Pool* poolFiles) : Mesh("../pile.obj", QVector3D(-1,-1,-1), poolFiles, "../textureduracell.png") {
+        this->type = type;
+    }
+    ~Pile() {}
+
+    int getType() {
+        return type;
+    }
+    int type = 0;    
+
+};
+
 class Skybox : public Mesh {
 public:
     Skybox();

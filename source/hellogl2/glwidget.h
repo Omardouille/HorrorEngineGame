@@ -136,9 +136,9 @@ private:
     int W = 1920;
 
     // Player
-    bool hasOne = true;
-    bool hasTwo = true;
-    bool hasThree = true;
+    bool hasOne = false;
+    bool hasTwo = false;
+    bool hasThree = false;
     int nmLight = 0;
 
     

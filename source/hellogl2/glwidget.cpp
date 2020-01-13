@@ -249,8 +249,6 @@ void GLWidget::initializeGL()
     systemeflash = new Container();
     systemeflash->addChild(flashlight);
 
-    //systemeflash->addChild(light2);
-
     systemeflash->transform.scale(0.005);
     systemeflash->transform.rotate(180, 0,0,1);
     systemeflash->transform.rotate(-100, 1,0,0);
@@ -263,16 +261,14 @@ void GLWidget::initializeGL()
    // light2 = new Light(SPOT_LIGHT, QVector3D(0.1,0.1,0.1), QVector3D(0.7,0.7,0.7), QVector3D(0.3,0.3,0.3));
     light2 = new FlashLight();
     light2->transform.rotate(180, 1,0,0);
-    //light2->transform.x = 1;
-   // light2->transform.y = 1;
     parentCamera->addChild(light2);
 
-  //  root->addChild(light2);
-   
-   /* lune = new Mesh("../cube.obj", QVector3D(0.5,0.5,0.5), poolFiles, "../flashlight.png");
-    lune->transform.translate(1, 1, 0);
+
+    lune = new Pile(0, poolFiles);
+    //lune->transform.scale(0.05);
+    lune->transform.y = 0.3;
+    lune->transform.x = 2;
     root->addChild(lune);
-    */
 
 
 
@@ -280,6 +276,15 @@ void GLWidget::initializeGL()
     timer->start( (1./(double)60)*1000., this);
 }
 
+/*Evenement avec signal
+Material
+Skybox mieux codé?
+glsl bonne version
+
+Fog
+Animation marche
+Ramasse
+*/
 
 void GLWidget::nextLight() {
     if(light2 != nullptr) {
@@ -321,21 +326,25 @@ void GLWidget::moveCamera(int pos) {
 }
 
 
-bool checkCollision(Container* parent, QVector3D & pbb, QVector3D & pBB) {
+bool checkCollision(Container* parent, QVector3D & pbb, QVector3D & pBB, Mesh* & collider) {
     for(Object* o : parent->children) {
         if(instanceof<Mesh>(o)) {
             QVector3D bb; QVector3D BB;
-            dynamic_cast<Mesh*>(o)->getAABB(bb, BB);
-            if(dynamic_cast<Mesh*>(o)->isCollider == false)
+            Mesh* tmpMesh = dynamic_cast<Mesh*>(o);
+            tmpMesh->getAABB(bb, BB);
+            if(tmpMesh->isCollider == false)
                 continue;
 
-            if( ( ( (bb[0] <= pbb[0]) && (bb[1] <= pbb[1]) && (bb[2] <= pbb[2]) ) && ( (BB[0] >= pBB[0]) && (BB[1] >= pBB[1]) && (BB[2] >= pBB[2]) )  ) 
-                || ( ( (bb[0] <= pbb[0]) && (bb[1] <= pbb[1]) && (bb[2] <= pbb[2]) ) && ( (BB[0] >= pBB[0]) && (BB[1] >= pBB[1]) && (BB[2] >= pBB[2]) )  ) ) {
-                    return true;
+            if( ( ( (bb[0] <= pbb[0]) && (bb[1] <= pbb[1]) && (bb[2] <= pbb[2]) ) && ( (BB[0] >= pbb[0]) && (BB[1] >= pbb[1]) && (BB[2] >= pbb[2]) )  ) 
+                || ( ( (bb[0] <= pBB[0]) && (bb[1] <= pBB[1]) && (bb[2] <= pBB[2]) ) && ( (BB[0] >= pBB[0]) && (BB[1] >= pBB[1]) && (BB[2] >= pBB[2]) )  ) ) {
+                    {
+                        collider = tmpMesh;
+                        return true;
+                    }
             }
 
         } else if(instanceof<Container>(o)) {
-            if(checkCollision(dynamic_cast<Container*>(o), pbb, pBB))
+            if(checkCollision(dynamic_cast<Container*>(o), pbb, pBB, collider))
                 return true;
         }
     }
@@ -413,10 +422,15 @@ void GLWidget::timerEvent(QTimerEvent *)
     pbb = parentCamera->getPosition() - QVector3D(0.02f, 0.5f, 0.0f);
     pBB = parentCamera->getPosition() + QVector3D(0.02f, 0.5f, 0.0f);
 
-    if(checkCollision(root, pbb, pBB)) {
+    Mesh* returnObject = nullptr;
+    bool coll = checkCollision(root, pbb, pBB, returnObject);
+    if(coll && !instanceof<Pile>(returnObject) ) {
         parentCamera->transform.y = y;
         parentCamera->transform.x = x;
         parentCamera->transform.z = z;
+    } else if(coll && instanceof<Pile>(returnObject) ) {
+        returnObject->transform.y -= 1000;
+        hasOne = true;
     }
     
         
