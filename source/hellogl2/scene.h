@@ -122,6 +122,52 @@ public:
 
 };
 
+class Ennemi : public Mesh {
+public:
+    Ennemi() {}
+    Ennemi(std::vector<QVector3D> ps, std::vector<QQuaternion> rs, Pool* poolFiles) : Mesh("../pile.obj", QVector3D(-1,-1,-1), poolFiles, "../textureduracell.png") {
+        this->ps = ps;
+        this->rs = rs;
+    }
+    ~Ennemi() {}
+
+    void nextStep() {
+        QVector3D vDir = (getPosition()-ps[posnumber]);
+        if(vDir.length() <= 0.01) { // marge erreur
+            transform.x = ps[posnumber][0];
+            transform.y = ps[posnumber][1];
+            transform.z = ps[posnumber][2];
+            if(!retour)
+                posnumber++;
+            else
+                posnumber--;
+            if(posnumber < 0) {
+                posnumber = 0; // peut être directement le suivant le 1
+                retour = false;
+            }
+            if(posnumber >= ps.size()) {
+                posnumber = ps.size()-1;
+                retour = true;
+            }
+        }
+        vDir.normalize();
+        vDir *= speed;
+        if(retour)
+            vDir = -vDir;
+        //transform.translate
+        transform.x += vDir[0];
+        transform.y += vDir[1];
+        transform.z += vDir[2];
+
+    }
+    bool retour = false;
+    float speed = 0.1;
+    int posnumber = 0;
+    std::vector<QVector3D> ps;
+    std::vector<QQuaternion> rs;
+
+};
+
 class Skybox : public Mesh {
 public:
     Skybox();
