@@ -197,6 +197,75 @@ void Mesh::draw(QMatrix4x4 & m_proj, QMatrix4x4 & m_camera, QVector3D & posCamer
    
 }
 
+UI::UI() : Object() {
+}
+
+
+UI::UI(Pool* poolFiles, std::string vertexShader, std::string fragmentShader) {
+
+    ShaderV_ID = poolFiles->loadShader(QOpenGLShader::Vertex, vertexShader);
+    ShaderF_ID = poolFiles->loadShader(QOpenGLShader::Fragment, fragmentShader);
+    //Texture_ID = poolFiles->loadTexture("../e88a3be821cca79bc9ec203b926c7c1e.jpg");
+    texture = new QOpenGLTexture(QImage("../e88a3be821cca79bc9ec203b926c7c1e.jpg").mirrored());
+   // Program_ID = poolFiles->loadProgram(Mesh_ID, -1, ShaderV_ID, ShaderF_ID);
+
+    this->poolFiles = poolFiles;
+
+    QVector3D vertices[] =
+    {
+        {-1.0f,  1.0f, -1.0f},
+        {-1.0f, -1.0f, -1.0f},
+        {+1.0f, -1.0f, -1.0f},
+        {+1.0f, -1.0f, -1.0f},
+        {+1.0f, +1.0f, -1.0f},
+        {-1.0f, +1.0f, -1.0f},
+    };
+
+    m_program.addShader(poolFiles->getShaderFromID(ShaderV_ID).shader);
+    m_program.addShader(poolFiles->getShaderFromID(ShaderF_ID).shader);
+    m_program.bindAttributeLocation("vertex", 0);
+    m_program.bindAttributeLocation("normal", 1);
+    m_program.bindAttributeLocation("texcoord", 2);
+
+    m_program.link();
+    m_program.bind();
+
+    m_vao.create();
+    QOpenGLVertexArrayObject::Binder vaoBinder(&m_vao);
+
+    m_vertex.create();
+    m_vertex.bind();
+    m_vertex.allocate(vertices, 36 * 3 * sizeof(GL_FLOAT));
+    QOpenGLFunctions *f = QOpenGLContext::currentContext()->functions();
+    f->glEnableVertexAttribArray(0);
+    f->glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3*sizeof(GL_FLOAT), 0);
+    m_vertex.release();
+    
+    m_program.setUniformValue("cameraPos", QVector3D(0, 0, 0));
+    m_program.setUniformValue("texture_diffuse", 0);
+    m_program.release();
+
+    this->color = color;
+}
+
+UI::~UI() {
+}
+
+
+void UI::draw(QMatrix4x4 & m_proj, QMatrix4x4 & m_camera, QVector3D & posCamera, std::vector<Object*> & lights) {
+    // Pour draw
+    QOpenGLVertexArrayObject::Binder vaoBinder(&m_vao);
+
+    m_program.bind();
+    QOpenGLFunctions *f = QOpenGLContext::currentContext()->functions();
+    texture->bind();
+ 
+    f->glDrawArrays(GL_TRIANGLES,0,6);
+    m_program.release();
+
+
+}
+
 Skybox::Skybox() : Mesh() {
 }
 
