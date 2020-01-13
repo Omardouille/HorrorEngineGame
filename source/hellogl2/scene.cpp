@@ -124,7 +124,8 @@ void Mesh::getAABB(QVector3D & bb, QVector3D & BB) {
 
 
 void Mesh::draw(QMatrix4x4 & m_proj, QMatrix4x4 & m_camera, QVector3D & posCamera, std::vector<Object*> & lights) {
-    
+    if(!isDraw)
+        return;
 
     // Optimiser le draw en gardant en compte le transform des parents dans les paramères du draw
 

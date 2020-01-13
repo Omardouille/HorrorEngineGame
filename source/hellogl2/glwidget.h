@@ -119,9 +119,10 @@ private:
     int m_zRot;
     Container* systemesolaire;
     Container* systemeflash;
-    Mesh* lune;
+    Mesh* pile;
+    std::vector<Ennemi*> enemys;
     Mesh* flashlight;
-    Mesh* terre;
+    Mesh* colliderFlash;
     Camera* camera;
     Container* root;
     Container* parentCamera;
@@ -137,12 +138,14 @@ private:
     int H = 1080;
     int W = 1920;
 
+    bool gameover = false;
+
     // Player
     bool hasOne = false;
     bool hasTwo = false;
     bool hasThree = false;
     int nmLight = 0;
-    float speed = 0.05;
+    float speed = 0.06;
     bool directionAnim = false;
 
     

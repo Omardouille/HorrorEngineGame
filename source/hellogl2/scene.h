@@ -93,6 +93,7 @@ public:
     void getAABB(QVector3D & bb, QVector3D & BB);
 
     bool isCollider = true;
+    bool isDraw = true;
 
 
 protected:
@@ -125,43 +126,109 @@ public:
 class Ennemi : public Mesh {
 public:
     Ennemi() {}
-    Ennemi(std::vector<QVector3D> ps, std::vector<QQuaternion> rs, Pool* poolFiles) : Mesh("../pile.obj", QVector3D(-1,-1,-1), poolFiles, "../textureduracell.png") {
+    Ennemi(std::vector<QVector3D> ps, std::vector<QQuaternion> rs, int type, Pool* poolFiles) : Mesh("../forest/eye.obj", QVector3D(-1,-1,-1), poolFiles, "../forest/eye-texture.jpg") {
         this->ps = ps;
-        this->rs = rs;
+        this->rs = rs;        
+        this->notInit = true;
+        this->type = type;
+
     }
     ~Ennemi() {}
 
-    void nextStep() {
-        QVector3D vDir = (getPosition()-ps[posnumber]);
-        if(vDir.length() <= 0.01) { // marge erreur
+    QVector3D getDirection() {
+        QVector3D m_world = QVector3D(0,0,1);
+        Object* nav = this;
+        while(nav != nullptr) {
+            m_world = nav->transform.getR().rotatedVector(m_world);
+            nav = nav->parent;
+        }
+        return m_world;
+    }
+
+    void death() {
+        transform.y += 1000;
+        dead = true;
+    }
+
+    void nextStep(QVector3D pos) {
+        if(dead)
+            return;
+
+        if(notInit) {
+            notInit = false;
+            transform.scale(0.5);
             transform.x = ps[posnumber][0];
             transform.y = ps[posnumber][1];
             transform.z = ps[posnumber][2];
-            if(!retour)
-                posnumber++;
-            else
-                posnumber--;
-            if(posnumber < 0) {
-                posnumber = 0; // peut être directement le suivant le 1
-                retour = false;
+            posnumber = 1;
+            if(type == 0) {
+                Texture_ID = poolFiles->loadTexture("../forest/eye1.png");
+            } else if(type == 1) {
+                Texture_ID = poolFiles->loadTexture("../forest/eye2.png");
+            } else if(type == 2) {
+                Texture_ID = poolFiles->loadTexture("../forest/eye3.png");
             }
-            if(posnumber >= ps.size()) {
-                posnumber = ps.size()-1;
-                retour = true;
-            }
+           // isCollider = false;
+            
+            vDir = (getPosition()-ps[posnumber]);
         }
-        vDir.normalize();
-        vDir *= speed;
-        if(retour)
-            vDir = -vDir;
-        //transform.translate
-        transform.x += vDir[0];
-        transform.y += vDir[1];
-        transform.z += vDir[2];
+
+        double lengthWithPlayer = (getPosition()-pos).length();
+
+        if(lengthWithPlayer <= distanceBeforeAttackingPlayer) {
+            QVector3D direct = (getPosition()-pos).normalized();
+            direct *= speed;
+            transform.x -= direct[0];
+            transform.y -= direct[1];
+            transform.z -= direct[2];
+
+            float angle = atan2(direct[2], direct[0]);
+            QQuaternion q = QQuaternion::fromAxisAndAngle(0, 1, 0, 180-angle/3.1415926535*180);
+            transform.setR(q);
+
+        } else {
+            double length = (getPosition()-ps[posnumber]).length();
+            if(length <= 0.09) { // marge erreur
+                transform.x = ps[posnumber][0];
+                transform.y = ps[posnumber][1];
+                transform.z = ps[posnumber][2];
+                if(!retour)
+                    posnumber++;
+                else
+                    posnumber--;
+                if(posnumber < 0) {
+                    posnumber = 1;
+                    retour = false;
+                }
+                if(posnumber >= ps.size()) {
+                    posnumber = ps.size()-2;
+                    retour = true;
+                }
+                vDir = (getPosition()-ps[posnumber]);
+                
+            }
+
+            
+            vDir.normalize();
+            vDir *= speed;
+            float angle = atan2(vDir[2], vDir[0]);
+            QQuaternion q = QQuaternion::fromAxisAndAngle(0, 1, 0, 180-angle/3.1415926535*180);
+            transform.setR(q);
+            transform.x -= vDir[0];
+            transform.y -= vDir[1];
+            transform.z -= vDir[2];
+        }
+
 
     }
+
+    QVector3D vDir;
+    int type = 0;
+    bool dead = false;
+    bool notInit = false;
     bool retour = false;
-    float speed = 0.1;
+    float distanceBeforeAttackingPlayer = 8;
+    float speed = 0.05;
     int posnumber = 0;
     std::vector<QVector3D> ps;
     std::vector<QQuaternion> rs;
@@ -270,7 +337,7 @@ public:
     int currentLight = 0;
     int nbLights = 4;
     QVector3D ambients[4] = { QVector3D(0.1, 0.1, 0.1),  QVector3D(0.1, 0.1, 0.1), QVector3D(0.1, 0.1, 0.1), QVector3D(0.1, 0.1, 0.1)};
-    QVector3D diffuses[4] = { QVector3D(0.6, 0.6, 0.6), QVector3D(0.0, 0.0, 0.6),  QVector3D(0.6, 0.0, 0.0), QVector3D(0.0, 0.6, 0.0)};
+    QVector3D diffuses[4] = { QVector3D(1.0, 1.0, 1.0), QVector3D(0.0, 0.0, 1.0),  QVector3D(1.0, 0.0, 0.0), QVector3D(0.0, 1.0, 0.0)};
     QVector3D speculars[4] = { QVector3D(0.1, 0.1, 0.1),  QVector3D(0.1, 0.1, 0.1), QVector3D(0.1, 0.1, 0.1), QVector3D(0.1, 0.1, 0.1)};
 
 };

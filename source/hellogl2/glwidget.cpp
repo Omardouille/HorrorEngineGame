@@ -263,27 +263,65 @@ void GLWidget::initializeGL()
     light2->transform.rotate(180, 1,0,0);
     parentCamera->addChild(light2);
 
+    // On rajoute un collider devant le joueur et qui detectera quand on touchera un ennemi
+    colliderFlash = new Mesh("../cube.obj", QVector3D(1,1,1), poolFiles, "../flashlight.png");
 
-    lune = new Pile(0, poolFiles);
-    //lune->transform.scale(0.05);
-    lune->transform.y = 0.3;
-    lune->transform.x = 2;
-    root->addChild(lune);
+    colliderFlash->transform.z = -2.2;
+    colliderFlash->transform.x = 0.0;
+    colliderFlash->isDraw = false;
+    parentCamera->addChild(colliderFlash);
 
+
+    pile = new Pile(0, poolFiles);
+    pile->transform.scale(0.5);
+    pile->transform.y = 0.3;
+    pile->transform.x = 2;
+    root->addChild(pile);
+
+    Pile* pile2 = new Pile(1, poolFiles);
+    pile2->transform.scale(0.5);
+    pile2->transform.x = 4.06181;
+    pile2->transform.y = 0.3;
+    pile2->transform.z = -44.9517;
+    root->addChild(pile2);
+
+    Pile* pile3 = new Pile(2, poolFiles);
+    pile3->transform.scale(0.5);
+    pile3->transform.x = -42.5886f;
+    pile3->transform.y = 0.3;
+    pile3->transform.z = -8.99305f;
+    root->addChild(pile3);
+
+
+    std::vector<QVector3D> posEnnemy = {QVector3D( -5.89132f, 0.5f, -7.47252f), QVector3D( -17.187f, 0.5f, -7.52449f),QVector3D( -17.109f,0.5f, -17.305f)};
+    std::vector<QQuaternion> rotEnnemy = {};
+    Ennemi* enemy = new Ennemi(posEnnemy, rotEnnemy, 1, poolFiles);
+    enemy->transform.y = 0.3;
+    enemy->transform.x = 4;
+    root->addChild(enemy);
+
+
+    std::vector<QVector3D> posEnnemy1 = {QVector3D(7.47954f, 0.5f, -64.7891f), QVector3D( -5.17595f,0.5f, -50.8534f)};
+    Ennemi* enemy1 = new Ennemi(posEnnemy1, rotEnnemy, 0, poolFiles);
+    enemy1->transform.y = 0.3;
+    enemy1->transform.x = 4;
+    root->addChild(enemy1);
+
+    std::vector<QVector3D> posEnnemy2 = {QVector3D( -38.3691f,0.5f, -53.6034f),QVector3D( -42.5791f,0.5f, -30.4858f),QVector3D( -28.6234f,0.5f, -9.7568f),QVector3D( -22.424f,0.5f, -28.2438f)};
+    Ennemi* enemy2 = new Ennemi(posEnnemy2, rotEnnemy, 2, poolFiles);
+    enemy2->transform.y = 0.3;
+    enemy2->transform.x = 4;
+    root->addChild(enemy2);
+
+    enemys.push_back(enemy);
+    enemys.push_back(enemy1);
+    enemys.push_back(enemy2);
 
 
     QBasicTimer* timer = new QBasicTimer();
     timer->start( (1./(double)60)*1000., this);
 }
 
-/*Evenement avec signal
-Material
-Skybox mieux codé?
-glsl bonne version
-
-Fog
-Animation marche
-*/
 
 void GLWidget::nextLight() {
     if(light2 != nullptr) {
@@ -311,6 +349,8 @@ void GLWidget::moveCamera(int pos) {
     else if(pos == 2) {
         isDown = true;
     } else if(pos == 4) {
+        qDebug() << "QVector3D(" << parentCamera->transform.x << "f,0.0f," << parentCamera->transform.z << "f);";
+        qDebug() << "QQuaternion(QVector4D(" << parentCamera->transform.getR().toVector4D()[0] << "," << parentCamera->transform.getR().toVector4D()[1] << "," << parentCamera->transform.getR().toVector4D()[2] << "," << parentCamera->transform.getR().toVector4D()[3] << ")";
         nextLight();
     } else {
         isUp = false;
@@ -351,6 +391,32 @@ bool checkCollision(Container* parent, QVector3D & pbb, QVector3D & pBB, Mesh* &
     return false;
 }
 
+bool checkCollisionEnnemy(Container* parent, QVector3D & pbb, QVector3D & pBB, Mesh* & collider) {
+    for(Object* o : parent->children) {
+        if(instanceof<Ennemi>(o)) {
+            QVector3D bb; QVector3D BB;
+            Mesh* tmpMesh = dynamic_cast<Mesh*>(o);
+            tmpMesh->getAABB(bb, BB);
+            if(tmpMesh->isCollider == false)
+                continue;
+
+            if( ( ( (bb[0] <= pbb[0]) && (bb[1] <= pbb[1]) && (bb[2] <= pbb[2]) ) && ( (BB[0] >= pbb[0]) && (BB[1] >= pbb[1]) && (BB[2] >= pbb[2]) )  ) 
+                || ( ( (bb[0] <= pBB[0]) && (bb[1] <= pBB[1]) && (bb[2] <= pBB[2]) ) && ( (BB[0] >= pBB[0]) && (BB[1] >= pBB[1]) && (BB[2] >= pBB[2]) )  ) ) {
+                    {
+                        collider = tmpMesh;
+                        return true;
+                    }
+            }
+
+        } else if(instanceof<Container>(o)) {
+            if(checkCollisionEnnemy(dynamic_cast<Container*>(o), pbb, pBB, collider))
+                return true;
+        }
+    }
+
+    return false;
+}
+
 void GLWidget::walkingAnimation(bool walking) {
     // Hard coded mais bon faut avoir des choses à montrer
     if(directionAnim && walking) {
@@ -373,6 +439,31 @@ void GLWidget::walkingAnimation(bool walking) {
 // Update General
 void GLWidget::timerEvent(QTimerEvent *)
 {
+    // Ici on a nos différentes instructions qui se font dans un update
+
+    // On avance les ennemis
+    QVector3D posPlayer = parentCamera->getPosition();
+    QVector3D posPlayerXZ(posPlayer[0], 0.5f, posPlayer[2]);
+
+    for(auto & e : enemys)
+        e->nextStep(posPlayerXZ);
+
+    // On regarde si notre box collider qui sert à savoir si on a touché un ennemi, a touché un ennemi
+    QVector3D bb; QVector3D BB;
+    colliderFlash->getAABB(bb, BB);
+    Mesh* returnObject = nullptr;
+    bool coll = checkCollisionEnnemy(root, bb, BB, returnObject);
+    if(coll && instanceof<Ennemi>(returnObject) ) {
+        // Si le type de l'ennemi correspond au type alors on peut le tuer
+        Ennemi* e = ((Ennemi*)returnObject);
+
+        if(e->type == nmLight-1) {
+            // Temporairement on simule la mort de l'ennemi en le déplacant et en arretant ces activites
+            // On a pas encore surchargé une fonction de destroy qui s'occupe de bien détruire meme dans la racine
+            e->death();
+        }
+    }
+
 
     // Systeme souris
     float dx = cursor.pos().x() - m_lastPos.x();
@@ -451,15 +542,23 @@ void GLWidget::timerEvent(QTimerEvent *)
     pbb = parentCamera->getPosition() - QVector3D(0.02f, 0.5f, 0.0f);
     pBB = parentCamera->getPosition() + QVector3D(0.02f, 0.5f, 0.0f);
 
-    Mesh* returnObject = nullptr;
-    bool coll = checkCollision(root, pbb, pBB, returnObject);
-    if(coll && !instanceof<Pile>(returnObject) ) {
+    returnObject = nullptr;
+    coll = checkCollision(root, pbb, pBB, returnObject);
+    if(coll && !instanceof<Pile>(returnObject) && !instanceof<Ennemi>(returnObject) ) {
         parentCamera->transform.y = y;
         parentCamera->transform.x = x;
         parentCamera->transform.z = z;
     } else if(coll && instanceof<Pile>(returnObject) ) {
         returnObject->transform.y -= 1000;
-        hasOne = true;
+        Pile* p = (Pile *)returnObject;
+        if(p->type == 0)
+            hasOne = true;
+        if(p->type == 1)
+            hasTwo = true;
+        if(p->type == 2)
+            hasThree = true;
+    } else if(coll && instanceof<Ennemi>(returnObject) ) {
+        gameover = true;
     }
 
     
@@ -478,6 +577,22 @@ void GLWidget::paintGL()
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_CULL_FACE);
 
+    if(gameover) {
+        glDisable(GL_BLEND);
+        glDepthMask(GL_FALSE);
+        glDisable(GL_DEPTH_TEST);
+        glDisable(GL_CULL_FACE);
+
+        QPainter painter(this);
+        QFont font = painter.font();
+        font.setPixelSize(48);
+        painter.setPen(Qt::red);
+        painter.setFont(font);
+        painter.drawText(width()/2-200, height()/2-200, 400, 200, Qt::AlignCenter, tr("GAME OVER !"));
+
+        painter.end();
+        return;
+    }
 
     // On pourrait stocker les adresses des lumieres pour les recup direct
     // C'est temporaire
@@ -519,6 +634,7 @@ void GLWidget::paintGL()
         painter.drawPixmap(width() - 180, height() - 100, 209/4, 360/4, QPixmap("../ui/b2.png"));
     if(hasThree)
         painter.drawPixmap(width() - 100, height() - 100, 209/4, 360/4, QPixmap("../ui/b3.png"));
+    
     painter.end();
    
 
