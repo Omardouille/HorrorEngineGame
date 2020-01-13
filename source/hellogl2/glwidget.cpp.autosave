@@ -595,8 +595,7 @@ void GLWidget::paintGL()
     }
 
     // On pourrait stocker les adresses des lumieres pour les recup direct
-    // C'est temporaire
-    // On pourrait calculer après directement les positions une fois avec les val nécessaires
+    // C'est temporaire, après on récupera directement les lumiè_res via le root comme on fait pour les tests de collisions
     std::vector<Object*> lights;
    // lights.push_back(light1);
     lights.push_back(light2);
